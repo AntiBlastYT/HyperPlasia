@@ -46,43 +46,45 @@ public class NeoUnits {
             constructor = LegsUnit::create;
             speed = 0.9f;
             drag = 0.11f;
-            hitSize = 11f;
+            hitSize = 21f;
             rotateSpeed = 3f;
             health = 150;
-            armor = 1f;
-            legStraightness = 0.3f;
-            stepShake = 0f;
+            armor = 6f;
+            legStraightness = 2f;
+            stepShake = 0.1f;
             drawCell = false;
 
             legCount = 4;
-            legLength = 10f;
+            legLength = 40f;
             lockLegBase = true;
             legContinuousMove = true;
             legExtension = -7.5f;
-            legBaseOffset = 2f;
+            legBaseOffset = 0f;
             legMaxLength = 2.1f;
             legMinLength = 1.4f;
             legLengthScl = 1.1f;
             legForwardScl = 1.3f;
-            legSpeed = 0.2f;
+            legSpeed = 0.3f;
             rippleScale = 0.2f;
 
-            legMoveSpace = 1.2f;
+            hovering = true;
+            legMoveSpace = 1.5f;
             allowLegStep = true;
             legPhysicsLayer = false;
 
-                weapons.add(new Weapon("spidern-weapon"){{
+                weapons.add(new Weapon("spidern-artillery"){{
+                layerOffset = -0.01f;
                 shootSound = Sounds.missile;
                 mirror = false;
-                showStatSprite = false;
+                showStatSprite = true;
                 x = 0f;
-                y = 5f;
-                shootY = 4f;
+                y = 0f;
+                shootX = -3f;
+                shootY = 1f;
                 reload = 63f;
                 cooldownTime = 42f;
-                heatColor = Pal.turretHeat;
 
-                bullet = new ArtilleryBulletType(3f, 40){{
+                bullet = new ArtilleryBulletType(6f, 40){{
                     shootEffect = new MultiEffect(Fx.shootSmallColor, new Effect(9, e -> {
                         color(Color.white, e.color, e.fin());
                         stroke(0.7f + e.fout());
@@ -118,6 +120,20 @@ public class NeoUnits {
                         strokeFrom = 2f;
                     }});
                 }};
+                            new Weapon("heal-weapon-mount"){{
+                shootSound = Sounds.lasershoot;
+                reload = 24f;
+                x = 8f;
+                y = -6f;
+                rotate = true;
+                bullet = new LaserBoltBulletType(5.2f, 10){{
+                    lifetime = 35f;
+                    healPercent = 5.5f;
+                    collidesTeam = true;
+                    backColor = Pal.heal;
+                    frontColor = Color.white;
+                }};
+            }};
             }});
         }};
 }
