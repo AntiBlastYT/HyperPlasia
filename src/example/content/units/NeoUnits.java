@@ -1,5 +1,6 @@
 package example.content.units;
 
+import arc.Core;
 import arc.freetype.FreeType.Size;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
@@ -38,24 +39,23 @@ import static mindustry.Vars.*;
 
 public class NeoUnits {
 
-    public static NeoplasmUnitType spidern;
+    public static ErekirUnitType spidern;
 
     public static void load(){
 
-        spidern = new NeoplasmUnitType("spidern"){{
+        spidern = new ErekirUnitType("spidern"){{
             constructor = LegsUnit::create;
             speed = 0.9f;
             drag = 0.11f;
             hitSize = 21f;
-            rotateSpeed = 3f;
+            rotateSpeed = 2f;
             health = 150;
             armor = 6f;
             legStraightness = 2f;
             stepShake = 0.1f;
-            drawCell = false;
 
             legCount = 4;
-            legLength = 40f;
+            legLength = 10f;
             lockLegBase = true;
             legContinuousMove = true;
             legExtension = -7.5f;
@@ -71,69 +71,41 @@ public class NeoUnits {
             legMoveSpace = 1.5f;
             allowLegStep = true;
             legPhysicsLayer = false;
+            groundLayer = Layer.legUnit;
 
-                weapons.add(new Weapon("spidern-artillery"){{
-                layerOffset = -0.01f;
-                shootSound = Sounds.missile;
-                mirror = false;
-                showStatSprite = true;
-                x = 0f;
-                y = 0f;
-                shootX = -3f;
-                shootY = 1f;
-                reload = 63f;
-                cooldownTime = 42f;
-
-                bullet = new ArtilleryBulletType(6f, 40){{
-                    shootEffect = new MultiEffect(Fx.shootSmallColor, new Effect(9, e -> {
-                        color(Color.white, e.color, e.fin());
-                        stroke(0.7f + e.fout());
-                        Lines.square(e.x, e.y, e.fin() * 5f, e.rotation + 45f);
-
-                        Drawf.light(e.x, e.y, 23f, e.color, e.fout() * 0.7f);
-                    }));
-
-                    collidesTiles = true;
-                    backColor = hitColor = Pal.techBlue;
-                    frontColor = Color.white;
-
-                    knockback = 0.8f;
-                    lifetime = 46f;
-                    width = height = 9f;
-                    splashDamageRadius = 19f;
-                    splashDamage = 30f;
-
-                    trailLength = 27;
-                    trailWidth = 2.5f;
-                    trailEffect = Fx.none;
-                    trailColor = backColor;
-
-                    trailInterp = Interp.slope;
-
-                    shrinkX = 0.6f;
-                    shrinkY = 0.2f;
-
-                    hitEffect = despawnEffect = new MultiEffect(Fx.hitSquaresColor, new WaveEffect(){{
-                        colorFrom = colorTo = Pal.techBlue;
-                        sizeTo = splashDamageRadius + 2f;
-                        lifetime = 9f;
-                        strokeFrom = 2f;
-                    }});
-                }};
-                            new Weapon("heal-weapon-mount"){{
-                shootSound = Sounds.lasershoot;
-                reload = 24f;
-                x = 8f;
-                y = -6f;
+                weapons.addAll(new Weapon("hyperplasia-spidern-artillery"){{
+                y = -7f;
+                x = 9f;
+                shootY = 7f;
+                reload = 45;
+                shake = 3f;
+                rotateSpeed = 2f;
+                shootSound = Sounds.artillery;
                 rotate = true;
-                bullet = new LaserBoltBulletType(5.2f, 10){{
-                    lifetime = 35f;
-                    healPercent = 5.5f;
-                    collidesTeam = true;
-                    backColor = Pal.heal;
-                    frontColor = Color.white;
+                shadow = 8f;
+                recoil = 3f;
+                shoot.shots = 3;
+                shoot.shotDelay = 4f;
+
+                bullet = new ArtilleryBulletType(2f, 12){{
+                    hitEffect = Fx.sapExplosion;    
+                    knockback = 0.8f;
+                    lifetime = 70f;
+                    width = height = 19f;
+                    collidesTiles = true;
+                    ammoMultiplier = 4f;
+                    splashDamageRadius = 70f;
+                    splashDamage = 65f;
+                    backColor = Pal.neoplasm2;
+                    frontColor = lightningColor = Pal.neoplasm2;
+                    lightning = 3;
+                    lightningLength = 10;
+                    smokeEffect = Fx.shootBigSmoke2;
+                    shake = 5f;
+
+                    status = StatusEffects.sapped;
+                    statusDuration = 60f * 10;
                 }};
-            }};
             }});
         }};
 }
