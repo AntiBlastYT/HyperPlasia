@@ -9,7 +9,7 @@ import mindustry.gen.*;
 import mindustry.mod.*;
 import mindustry.ui.dialogs.*;
 import example.content.*;
-import example.content.units.NeoUnits;;
+import example.content.units.NeoUnitTypes;;
 
 public class ExampleJavaMod extends Mod{
 
@@ -24,7 +24,7 @@ public class ExampleJavaMod extends Mod{
     @Override
     public void loadContent(){
         Log.info("Loading some example content.");
-        NeoUnits.load();
+        NeoUnitTypes.load();
     }
 
 }
