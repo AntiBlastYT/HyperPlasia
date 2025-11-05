@@ -39,11 +39,11 @@ import static mindustry.Vars.*;
 
 public class NeoUnits {
 
-    public static ErekirUnitType spidern;
+    public static NeoplasmUnitType spidern;
 
     public static void load(){
 
-        spidern = new ErekirUnitType("spidern"){{
+        spidern = new NeoplasmUnitType("spidern"){{
             constructor = LegsUnit::create;
             speed = 0.9f;
             drag = 0.11f;
@@ -51,11 +51,11 @@ public class NeoUnits {
             rotateSpeed = 2f;
             health = 150;
             armor = 6f;
-            legStraightness = 2f;
+            legStraightness = 01f;
             stepShake = 0.1f;
 
             legCount = 4;
-            legLength = 10f;
+            legLength = 20f;
             lockLegBase = true;
             legContinuousMove = true;
             legExtension = -7.5f;
@@ -73,7 +73,7 @@ public class NeoUnits {
             legPhysicsLayer = false;
             groundLayer = Layer.legUnit;
 
-                weapons.addAll(new Weapon("hyperplasia-spidern-artillery"){{
+                weapons.addAll(new Weapon("hyperplasia-spidern"){{
                 y = -7f;
                 x = 9f;
                 shootY = 7f;
@@ -82,7 +82,6 @@ public class NeoUnits {
                 rotateSpeed = 2f;
                 shootSound = Sounds.artillery;
                 rotate = true;
-                shadow = 8f;
                 recoil = 3f;
                 shoot.shots = 3;
                 shoot.shotDelay = 4f;
