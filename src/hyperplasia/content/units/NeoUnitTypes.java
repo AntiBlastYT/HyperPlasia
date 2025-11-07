@@ -123,105 +123,214 @@ public class NeoUnitTypes {
                 }};
             }});
         }};
+gastritis = new NeoplasmUnitType("gastritis") {{
+    constructor = LegsUnit::create;
+    speed = 0.65f;
+    drag = 0.1f;
+    hitSize = 22f;
+    rotateSpeed = 3f;
+    health = 3400;
+    armor = 8f;
+    legStraightness = 0.6f;
+    baseLegStraightness = 0.5f;
+    fogRadius = 40f;
+    stepShake = 0f;
 
-            gastritis = new NeoplasmUnitType("gastritis") {{
-            constructor = LegsUnit::create;
-            speed = 0.65f;
-            drag = 0.1f;
-            hitSize = 21f;
-            rotateSpeed = 3f;
-            health = 2900;
-            armor = 7f;
-            fogRadius = 40f;
-            stepShake = 0f;
+    legCount = 5;
+    legLength = 18f;
+    lockLegBase = true;
+    legContinuousMove = true;
+    legGroupSize = -3;
+    legExtension = -3f;
+    legBaseOffset = 7f;
+    legMaxLength = 1.1f;
+    legMinLength = 0.2f;
+    legLengthScl = 0.95f;
+    legForwardScl = 0.9f;
+    alwaysShootWhenMoving = true;
 
-            legCount = 6;
-            legLength = 18f;
-            legGroupSize = 3;
-            lockLegBase = true;
-            legContinuousMove = true;
-            legExtension = -3f;
-            legBaseOffset = 7f;
-            legMaxLength = 1.1f;
-            legMinLength = 0.2f;
-            legLengthScl = 0.95f;
-            legForwardScl = 0.9f;
+    legMoveSpace = 1f;
+    hovering = true;
 
-            legMoveSpace = 1f;
-            hovering = true;
+    shadowElevation = 0.2f;
+    groundLayer = Layer.legUnit - 1f;
 
-            shadowElevation = 0.2f;
-            groundLayer = Layer.legUnit - 1f;
+    // =====================================================
+    // ✅ MAIN GASTRITIS MISSILE WEAPON (missile added here)
+    // =====================================================
+    weapons.addAll(new Weapon("hyperplasia-gastritis-weapon") {{
+        mirror = false;
+        x = -7;
+        y = -2;
+        showStatSprite = false;
+        reload = 500f;
+        layerOffset = 0.01f;
+        heatColor = Color.red;
+        cooldownTime = 60f;
+        smoothReloadSpeed = 0.15f;
+        shootWarmupSpeed = 0.05f;
+        minWarmup = 0.9f;
+        rotationLimit = 70f;
+        rotateSpeed = 2f;
+        inaccuracy = 20f;
+        shootStatus = StatusEffects.slow;
+        alwaysShootWhenMoving = true;
 
-            weapons.addAll(new Weapon("hyperplasia-gastritis-weapon") {{
-                rotate = true;
-                rotateSpeed = 0.9f;
-                mirror = false;
-                x = -4;
-                y = -3;
-                recoil = 2;
-                shootSound = Sounds.shootAltLong;
-                shootY = 4;
-                reload = 90;
-                bullet = new BasicBulletType(8f, 60) {{
-                    sprite = "missile-large";
-                    shrinkY = 0;
-                    shrinkX = 0.2f;
-                    hitSize = 4;
-                    lifetime = 15;
-                    pierceCap = 3;
-                    shootEffect = Fx.shootBig;
-                    smokeEffect = Fx.shootSmallColor;
-                    frontColor = Pal.neoplasm1;
-                    backColor = trailColor = lightColor = Pal.neoplasm2;
-                    width = height = 15;
-                    trailLength = 14;
-                }};
-            }}, new Weapon("hyperplasia-gastritis-side-weapon") {{
-                    reload = 240f;
-                    xRand = 10f;
-                    shootY = 5f;
-                    top = false;
+        parts.add(new RegionPart("-missile") {{
+    progress = PartProgress.reload.curve(Interp.pow2In);
+
+    y = 2f;
+
+    color = new Color(224, 84, 56, 1f);
+
+    colorTo = new Color(224, 84, 56, 1f);
+
+    mixColor = new Color(224, 84, 56, 0f);
+    mixColorTo = Pal.accent;
+
+    outlineColor = Pal.neoplasmOutline;
+
+    under = true;
+    layerOffset = 0.02f;
+
+    moves.add(new PartMove(PartProgress.warmup.inv(), 0f, 2f, 0f));
+        }});
+
+        parts.add(new RegionPart("-back") {{
+            mirror = false;
+            under = true;
+            moves.add(new PartMove(PartProgress.reload,0f, -1f, 0f));
+            heatColor = Color.red;
+            cooldownTime = 60f;
+            layerOffset = 0.02f;
+        }});
+
+        parts.add(new RegionPart("-right-blade") {{
+            mirror = false;
+            moveRot = -10f;
+            under = true;
+            moves.add(new PartMove(PartProgress.reload, 1f, -0.5f, 0f));
+            heatColor = Color.red;
+            cooldownTime = 60f;
+            layerOffset = 0.02f;
+        }});
+
+        parts.add(new RegionPart("-left-blade") {{
+            mirror = false;
+            moveRot = 10f;
+            under = true;
+            moves.add(new PartMove(PartProgress.reload,-1f, -0.5f, 0f));
+            heatColor = Color.red;
+            cooldownTime = 60f;
+            layerOffset = 0.02f;
+        }});
+
+
+
+        bullet = new BulletType(0f, 0f) {{
+            keepVelocity = false;
+            collides = false;
+            absorbable = false;
+            hittable = false;
+            reflectable = false;
+            despawnEffect = Fx.none;
+
+            spawnUnit = new MissileUnitType("gastritis-weapon-missile") {{
+                trailColor = engineColor = Pal.techBlue;
+                engineSize = 1.75f;
+                engineLayer = Layer.effect;
+                speed = 3.7f;
+                maxRange = 6f;
+                lifetime = 60f * 1.5f;
+                outlineColor = Pal.neoplasmOutline;
+                health = 55;
+                lowAltitude = true;
+
+                parts.add(new FlarePart() {{
+                    progress = PartProgress.life.slope().curve(Interp.pow2In);
+                    radius = 0f;
+                    radiusTo = 35f;
+                    stroke = 3f;
+                    rotation = 45f;
+                    y = -5f;
+                    followRotation = true;
+                }});
+
+                weapons.add(new Weapon() {{
+                    shootSound = Sounds.none;
+                    shootCone = 360f;
                     mirror = false;
-                    velocityRnd = 0.3f;
-                    x = 7;
-                    y = 4;
+                    reload = 1f;
+                    shootOnDeath = true;
 
-
-                    shoot = new ShootMulti(new ShootBarrel() {{
-                        shots = 3;
-                        barrels = new float[]
-                                {
-                                        0, 0, 0,
-                                        0, 0, 0,
-                                        0, 0, 0,
-                                };
-                    }}, new ShootPattern() {{
-                        shots = 9;
-                        shotDelay = 4.5f;
-                    }});
-
-
-                    bullet = new MissileBulletType(3f, 14){{
-                    sprite = "missile-large";
-                    width = 8f;
-                    height = 8f;
-                    shrinkY = 0f;
-                    drag = -0.003f;
-                    homingRange = 60f;
-                    keepVelocity = false;
-                    splashDamageRadius = 25f;
-                    splashDamage = 15f;
-                    lifetime = 50f;
-                    trailColor = Pal.unitBack;
-                    backColor = Pal.unitBack;
-                    frontColor = Pal.unitFront;
-                    hitEffect = Fx.blastExplosion;
-                    despawnEffect = Fx.blastExplosion;
-                    weaveScale = 8f;
-                    weaveMag = 2f;
-                }};
-            }});
+                    bullet = new ExplosionBulletType(140f, 25f) {{
+                        shootEffect = new MultiEffect(
+                            Fx.massiveExplosion,
+                            new WrapEffect(Fx.dynamicSpikes, Pal.techBlue, 24f),
+                            new WaveEffect() {{
+                                colorFrom = colorTo = Pal.techBlue;
+                                sizeTo = 40f;
+                                lifetime = 12f;
+                                strokeFrom = 4f;
+                            }}
+                        );
+                    }};
+                }});
+            }};
         }};
+    }});
+
+    weapons.add(new Weapon("hyperplasia-gastritis-side-weapon") {{
+        reload = 240f;
+        recoil = -1f;
+        xRand = 10f;
+        yRand = 10f;
+        shootY = 0f;
+        shootCone = 270f;
+        top = false;
+        mirror = false;
+        velocityRnd = 0.3f;
+        baseRotation = 90f;
+        x = 7;
+        y = 3;
+
+        shoot = new ShootMulti(
+            new ShootBarrel() {{
+                shots = 3;
+                shotDelay = 9f;
+                barrels = new float[]{
+                    0, 0, 160,
+                    0, 0, 170,
+                    0, 0, 180
+                };
+            }},
+            new ShootPattern() {{
+                shots = 3;
+                shotDelay = 9f;
+            }}
+        );
+
+        bullet = new MissileBulletType(3f, 14) {{
+            sprite = "missile-large";
+            width = 6f;
+            height = 7;
+            shrinkY = 0f;
+            drag = -0.003f;
+            homingRange = 60f;
+            keepVelocity = false;
+            splashDamageRadius = 25f;
+            splashDamage = 15f;
+            lifetime = 60f;
+            trailColor = Pal.unitBack;
+            backColor = Pal.unitBack;
+            frontColor = Pal.unitFront;
+            hitEffect = Fx.blastExplosion;
+            despawnEffect = Fx.blastExplosion;
+            weaveScale = 8f;
+            weaveMag = 2f;
+        }};
+    }});
+}};
+
 }
 }
