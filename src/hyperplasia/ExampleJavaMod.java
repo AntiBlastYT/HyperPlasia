@@ -1,15 +1,15 @@
-package example;
+package hyperplasia;
 
 import arc.*;
 import arc.util.*;
+import hyperplasia.content.*;
+import hyperplasia.content.units.NeoUnitTypes;
 import mindustry.*;
 import mindustry.content.*;
 import mindustry.game.EventType.*;
 import mindustry.gen.*;
 import mindustry.mod.*;
-import mindustry.ui.dialogs.*;
-import example.content.*;
-import example.content.units.NeoUnitTypes;;
+import mindustry.ui.dialogs.*;;
 
 public class ExampleJavaMod extends Mod{
 

@@ -1,4 +1,4 @@
-package example.content.units;
+package hyperplasia.content.units;
 
 import arc.Core;
 import arc.freetype.FreeType.Size;
@@ -73,7 +73,7 @@ public class NeoUnitTypes {
 
             legMoveSpace = 0.9f;    
 
-            weapons.addAll(new Weapon("hyperplasia-spidern-weapon") {{
+            weapons.addAll(new Weapon("hyperplasia-spidern") {{
                 rotate = true;
                 rotateSpeed = 0.9f;
                 mirror = false;
@@ -97,7 +97,7 @@ public class NeoUnitTypes {
                     width = height = 15;
                     trailLength = 14;
                 }};
-            }}, new Weapon("hyperplasia-spidern-weapon") {{
+            }}, new Weapon("spidern-weapon") {{
                 rotate = true;
                 rotateSpeed = 1.1f;
                 mirror = false;
