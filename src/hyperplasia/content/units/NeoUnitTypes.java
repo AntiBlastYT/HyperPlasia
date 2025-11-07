@@ -39,7 +39,7 @@ import static mindustry.Vars.*;
 
 public class NeoUnitTypes {
 
-    public static NeoplasmUnitType spidern;
+    public static NeoplasmUnitType spidern, gastritis;
 
     public static void load(){
 
@@ -120,6 +120,106 @@ public class NeoUnitTypes {
                     backColor = trailColor = lightColor = Pal.neoplasm2;
                     width = height = 8;
                     trailLength = 7;
+                }};
+            }});
+        }};
+
+            gastritis = new NeoplasmUnitType("gastritis") {{
+            constructor = LegsUnit::create;
+            speed = 0.65f;
+            drag = 0.1f;
+            hitSize = 21f;
+            rotateSpeed = 3f;
+            health = 2900;
+            armor = 7f;
+            fogRadius = 40f;
+            stepShake = 0f;
+
+            legCount = 6;
+            legLength = 18f;
+            legGroupSize = 3;
+            lockLegBase = true;
+            legContinuousMove = true;
+            legExtension = -3f;
+            legBaseOffset = 7f;
+            legMaxLength = 1.1f;
+            legMinLength = 0.2f;
+            legLengthScl = 0.95f;
+            legForwardScl = 0.9f;
+
+            legMoveSpace = 1f;
+            hovering = true;
+
+            shadowElevation = 0.2f;
+            groundLayer = Layer.legUnit - 1f;
+
+            weapons.addAll(new Weapon("hyperplasia-gastritis-weapon") {{
+                rotate = true;
+                rotateSpeed = 0.9f;
+                mirror = false;
+                x = -4;
+                y = -3;
+                recoil = 2;
+                shootSound = Sounds.shootAltLong;
+                shootY = 4;
+                reload = 90;
+                bullet = new BasicBulletType(8f, 60) {{
+                    sprite = "missile-large";
+                    shrinkY = 0;
+                    shrinkX = 0.2f;
+                    hitSize = 4;
+                    lifetime = 15;
+                    pierceCap = 3;
+                    shootEffect = Fx.shootBig;
+                    smokeEffect = Fx.shootSmallColor;
+                    frontColor = Pal.neoplasm1;
+                    backColor = trailColor = lightColor = Pal.neoplasm2;
+                    width = height = 15;
+                    trailLength = 14;
+                }};
+            }}, new Weapon("hyperplasia-gastritis-side-weapon") {{
+                    reload = 240f;
+                    xRand = 10f;
+                    shootY = 5f;
+                    top = false;
+                    mirror = false;
+                    velocityRnd = 0.3f;
+                    x = 7;
+                    y = 4;
+
+
+                    shoot = new ShootMulti(new ShootBarrel() {{
+                        shots = 3;
+                        barrels = new float[]
+                                {
+                                        0, 0, 0,
+                                        0, 0, 0,
+                                        0, 0, 0,
+                                };
+                    }}, new ShootPattern() {{
+                        shots = 9;
+                        shotDelay = 4.5f;
+                    }});
+
+
+                    bullet = new MissileBulletType(3f, 14){{
+                    sprite = "missile-large";
+                    width = 8f;
+                    height = 8f;
+                    shrinkY = 0f;
+                    drag = -0.003f;
+                    homingRange = 60f;
+                    keepVelocity = false;
+                    splashDamageRadius = 25f;
+                    splashDamage = 15f;
+                    lifetime = 50f;
+                    trailColor = Pal.unitBack;
+                    backColor = Pal.unitBack;
+                    frontColor = Pal.unitFront;
+                    hitEffect = Fx.blastExplosion;
+                    despawnEffect = Fx.blastExplosion;
+                    weaveScale = 8f;
+                    weaveMag = 2f;
                 }};
             }});
         }};
