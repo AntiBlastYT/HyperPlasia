@@ -39,11 +39,11 @@ import static mindustry.Vars.*;
 
 public class NeoUnitTypes {
 
-    public static UnitType spidern;
+    public static NeoplasmUnitType spidern;
 
     public static void load(){
 
-        spidern = new UnitType("spidern") {{
+        spidern = new NeoplasmUnitType("spidern") {{
             constructor = LegsUnit::create;
             speed = 0.45f;
             hitSize = 16;
@@ -73,7 +73,7 @@ public class NeoUnitTypes {
 
             legMoveSpace = 0.9f;    
 
-            weapons.addAll(new Weapon("hyperplasia-spidern") {{
+            weapons.addAll(new Weapon("hyperplasia-spidern-gun") {{
                 rotate = true;
                 rotateSpeed = 0.9f;
                 mirror = false;
@@ -97,7 +97,7 @@ public class NeoUnitTypes {
                     width = height = 15;
                     trailLength = 14;
                 }};
-            }}, new Weapon("spidern-weapon") {{
+            }}, new Weapon("hyperplasia-spidern-weapon") {{
                 rotate = true;
                 rotateSpeed = 1.1f;
                 mirror = false;
