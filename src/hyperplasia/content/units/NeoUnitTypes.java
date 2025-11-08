@@ -13,6 +13,7 @@ import mindustry.ai.types.*;
 import mindustry.content.Bullets;
 import mindustry.content.Fx;
 import mindustry.content.Items;
+import mindustry.content.Liquids;
 import mindustry.content.StatusEffects;
 import mindustry.entities.*;
 import mindustry.entities.abilities.*;
@@ -128,9 +129,9 @@ gastritis = new NeoplasmUnitType("gastritis") {{
     speed = 0.65f;
     drag = 0.1f;
     hitSize = 22f;
-    rotateSpeed = 3f;
-    health = 3400;
-    armor = 8f;
+    rotateSpeed = 1f;
+    health = 4400;
+    armor = 1f;
     legStraightness = 0.6f;
     baseLegStraightness = 0.5f;
     fogRadius = 40f;
@@ -149,6 +150,15 @@ gastritis = new NeoplasmUnitType("gastritis") {{
     legForwardScl = 0.9f;
     alwaysShootWhenMoving = true;
 
+    abilities.add(new LiquidExplodeAbility(){{
+    liquid = Liquids.neoplasm;
+    amount = 40f;      // how much liquid to spawn
+    range = tilesize * 4f;
+          // splash radius
+    }});
+
+
+
     legMoveSpace = 1f;
     hovering = true;
 
@@ -162,8 +172,9 @@ gastritis = new NeoplasmUnitType("gastritis") {{
         mirror = false;
         x = -7;
         y = -2;
-        showStatSprite = false;
-        reload = 500f;
+        showStatSprite = true;
+        baseRotation = 5;
+        reload = 300f;
         layerOffset = 0.01f;
         heatColor = Color.red;
         cooldownTime = 60f;
@@ -171,25 +182,23 @@ gastritis = new NeoplasmUnitType("gastritis") {{
         shootWarmupSpeed = 0.05f;
         minWarmup = 0.9f;
         rotationLimit = 70f;
-        rotateSpeed = 2f;
-        inaccuracy = 20f;
+        rotateSpeed = 0.5f;
+        inaccuracy = 3f;
         shootStatus = StatusEffects.slow;
         alwaysShootWhenMoving = true;
+        rotate = true;
 
         parts.add(new RegionPart("-missile") {{
     progress = PartProgress.reload.curve(Interp.pow2In);
-
+    
     y = 2f;
 
-    color = new Color(224, 84, 56, 1f);
+    color = new Color(224, 84, 56, 0f);
 
-    colorTo = new Color(224, 84, 56, 1f);
+    colorTo = Pal.neoplasm2;
 
     mixColor = new Color(224, 84, 56, 0f);
     mixColorTo = Pal.accent;
-
-    outlineColor = Pal.neoplasmOutline;
-
     under = true;
     layerOffset = 0.02f;
 
@@ -236,25 +245,42 @@ gastritis = new NeoplasmUnitType("gastritis") {{
             despawnEffect = Fx.none;
 
             spawnUnit = new MissileUnitType("gastritis-weapon-missile") {{
-                trailColor = engineColor = Pal.techBlue;
-                engineSize = 1.75f;
-                engineLayer = Layer.effect;
-                speed = 3.7f;
-                maxRange = 6f;
-                lifetime = 60f * 1.5f;
-                outlineColor = Pal.neoplasmOutline;
-                health = 55;
-                lowAltitude = true;
+                    speed = 2.6f;
+                    maxRange = 3f;
+                    lifetime = 30f * 5.5f;
+                    outlineColor = Pal.neoplasmOutline;
+                    engineColor = trailColor = Pal.redLight;
+                    engineLayer = Layer.effect;
+                    engineSize = 3.1f;
+                    engineOffset = 10f;
+                    rotateSpeed = 0.25f;
+                    trailLength = 18;
+                    missileAccelTime = 100f;
+                    lowAltitude = true;
+                    loopSound = Sounds.missileTrail;
+                    loopSoundVolume = 0.6f;
+                    deathSound = Sounds.largeExplosion;
+                    targetAir = false;
+                    targetUnderBlocks = false;
 
-                parts.add(new FlarePart() {{
-                    progress = PartProgress.life.slope().curve(Interp.pow2In);
-                    radius = 0f;
-                    radiusTo = 35f;
-                    stroke = 3f;
-                    rotation = 45f;
-                    y = -5f;
-                    followRotation = true;
-                }});
+                    fogRadius = 6f;
+
+                    health = 360;
+
+                    puddleAmount = 40f;
+                    puddleLiquid = Liquids.neoplasm;
+                    puddleAmount = 100f;
+                    puddleRange = tilesize * 5f;
+                    fragLifeMin = 0.2f;
+                    fragBullets = 5;
+                    fragSpread = 40f;
+                            abilities.add(new LiquidExplodeAbility(){{
+                            liquid = Liquids.neoplasm;
+                            puddleRange = tilesize * 5f;
+                            puddleAmount = 40f;
+                            puddleLiquid = Liquids.neoplasm;
+                            puddleAmount = 100f;
+                    }});
 
                 weapons.add(new Weapon() {{
                     shootSound = Sounds.none;
@@ -263,19 +289,34 @@ gastritis = new NeoplasmUnitType("gastritis") {{
                     reload = 1f;
                     shootOnDeath = true;
 
-                    bullet = new ExplosionBulletType(140f, 25f) {{
-                        shootEffect = new MultiEffect(
-                            Fx.massiveExplosion,
-                            new WrapEffect(Fx.dynamicSpikes, Pal.techBlue, 24f),
-                            new WaveEffect() {{
-                                colorFrom = colorTo = Pal.techBlue;
-                                sizeTo = 40f;
-                                lifetime = 12f;
-                                strokeFrom = 4f;
-                            }}
-                        );
-                    }};
-                }});
+                    fragLifeMin = 0.2f;
+                    fragBullets = 5;
+                    fragSpread = 40f;
+
+                    fragBullet = new BasicBulletType(3f, 20){{
+                    knockback = 0.8f;
+                    lifetime = 80f;
+                    width = height = 11f;
+                    collidesTiles = true;
+                    splashDamageRadius = 25f * 0.75f;
+                    splashDamage = 33f;
+                    reloadMultiplier = 1.2f;
+                    ammoMultiplier = 3f;
+                    puddleAmount = 10f;
+                    puddleLiquid = Liquids.neoplasm;
+                    puddleAmount = 1f;
+
+                    trailLength = 2;
+                    trailWidth = 1.5f;
+                    trailEffect = Fx.disperseTrail;
+                    trailColor = Pal.neoplasm2;
+
+                    despawnEffect = Fx.hitBulletColor;
+                    backColor = hitColor = trailColor = Pal.neoplasm2;
+                    frontColor = Pal.neoplasm1;
+                        }};
+                    }});
+
             }};
         }};
     }});
@@ -284,8 +325,8 @@ gastritis = new NeoplasmUnitType("gastritis") {{
         reload = 240f;
         recoil = -1f;
         xRand = 10f;
-        yRand = 10f;
-        shootY = 0f;
+        yRand = 3f;
+        shootY = 5f;
         shootCone = 270f;
         top = false;
         mirror = false;
