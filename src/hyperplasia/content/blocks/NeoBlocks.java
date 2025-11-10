@@ -45,22 +45,22 @@ import static mindustry.type.ItemStack.*;
 
 public class NeoBlocks {
     
-        public static Block neoplasmSynthesizer;
+        public static Block neoplasmSynthesizer, chitinFabricator;
 
     public static void load(){
 
             neoplasmSynthesizer = new ConsumeGenerator("neoplasm-synthesizer"){{
             requirements(Category.crafting, with(Items.oxide, 40, Items.silicon, 60, Items.graphite, 80));
             size = 3;
-            liquidCapacity = 80f;
-            outputLiquid = new LiquidStack(Liquids.neoplasm, 20f / 60f);
+            liquidCapacity = 40f;
+            outputLiquid = new LiquidStack(Liquids.neoplasm, 6f / 60f);
             explodeOnFull = true;
 
             consumeLiquid(Liquids.water, 15f / 60f);
             consumeItem(Items.oxide);
 
-            itemDuration = 60f * 3f;
-            itemCapacity = 10;
+            itemDuration = 60f * 4f;
+            itemCapacity = 20;
 
             explosionRadius = 7;
             explosionDamage = 500;
@@ -73,29 +73,45 @@ public class NeoBlocks {
             ambientSound = Sounds.bioLoop;
             ambientSoundVolume = 0.1f;
 
-            explosionPuddles = 30;
-            explosionPuddleRange = tilesize * 4f;
+            explosionPuddles = 60;
+            explosionPuddleRange = tilesize * 5f;
             explosionPuddleLiquid = Liquids.neoplasm;
-            explosionPuddleAmount = 70f;
+            explosionPuddleAmount = 90f;
             explosionMinWarmup = 1f;
 
-            consumeEffect = new RadialEffect(Fx.neoplasiaSmoke, 3, 30f, 30f / 4f);
+            consumeEffect = new RadialEffect(Fx.neoplasiaSmoke, 4, 90f, 54f / 4f);
 
-            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.neoplasm),
-            new DrawCells(){{
-                color = Color.valueOf("c33e2b");
-                particleColorFrom = Color.valueOf("e8803f");
-                particleColorTo = Color.valueOf("8c1225");
-                particles = 30;
-                range = 4f;
-            }});
-                drawer = new DrawMulti(new DrawDefault(), new DrawBlurSpin("", 0.6f * 9f){{
-                blurThresh = 0.01f;
-            }});
+
+            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.water), new DrawDefault());
+            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.neoplasm), new DrawDefault());
         
-
+            
         }};
 
+            chitinFabricator = new ConsumeGenerator("chitin-fabricator"){{
+            requirements(Category.crafting, with(Items.tungsten, 60, Items.silicon, 60, Items.beryllium, 110));
+            size = 3;
+            liquidCapacity = 40f;
+            explodeOnFull = true;
+
+            consumeLiquid(Liquids.neoplasm, 4f / 60f);
+            consumeItem(Items.tungsten);
+
+
+            itemDuration = 60f * 2f;
+            itemCapacity = 30;
+            outputLiquid = new LiquidStack(Liquids.neoplasm, 6f / 60f);
+
+
+            ambientSound = Sounds.bioLoop;
+            ambientSoundVolume = 0.1f;
+
+
+
+
+            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.neoplasm), new DrawDefault());
+
+        }};
 
 }
 }
