@@ -3,8 +3,6 @@ package hyperplasia;
 import arc.*;
 import arc.util.*;
 import hyperplasia.content.*;
-import hyperplasia.content.units.NeoUnitTypes;
-import hyperplasia.content.blocks.*;
 import mindustry.*;
 import mindustry.content.*;
 import mindustry.game.EventType.*;
@@ -27,6 +25,7 @@ public class ExampleJavaMod extends Mod{
         Log.info("Loading some example content.");
         NeoUnitTypes.load();
         NeoBlocks.load();
+        NeoItems.load();
     }
 
 }

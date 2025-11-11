@@ -1,4 +1,4 @@
-package hyperplasia.content.units;
+package hyperplasia.content;
 
 import arc.Core;
 import arc.freetype.FreeType.Size;

@@ -1,4 +1,4 @@
-package hyperplasia.content.blocks;
+package hyperplasia.content;
 
 import arc.graphics.*;
 import arc.math.*;
@@ -58,6 +58,7 @@ public class NeoBlocks {
 
             consumeLiquid(Liquids.water, 15f / 60f);
             consumeItem(Items.oxide);
+            generateEffect = Fx.neoplasiaSmoke;
 
             itemDuration = 60f * 4f;
             itemCapacity = 20;
@@ -73,44 +74,51 @@ public class NeoBlocks {
             ambientSound = Sounds.bioLoop;
             ambientSoundVolume = 0.1f;
 
-            explosionPuddles = 60;
+            explosionPuddles = 90;
             explosionPuddleRange = tilesize * 5f;
             explosionPuddleLiquid = Liquids.neoplasm;
-            explosionPuddleAmount = 90f;
+            explosionPuddleAmount = 130f;
             explosionMinWarmup = 1f;
 
-            consumeEffect = new RadialEffect(Fx.neoplasiaSmoke, 4, 90f, 54f / 4f);
-
-
-            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.water), new DrawDefault());
-            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.neoplasm), new DrawDefault());
-        
+            consumeEffect = new RadialEffect(Fx.neoplasiaSmoke, 4, 90f, 27f / 4f);
             
+
+
+
+            drawer = new DrawMulti(new DrawBlurSpin("-rotator", 6f), new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.neoplasm), new DrawDefault());
+         
         }};
 
-            chitinFabricator = new ConsumeGenerator("chitin-fabricator"){{
+            chitinFabricator = new GenericCrafter("chitin-fabricator"){{
             requirements(Category.crafting, with(Items.tungsten, 60, Items.silicon, 60, Items.beryllium, 110));
-            size = 3;
+            craftEffect = Fx.none;
+            outputItem = new ItemStack(NeoItems.chitin, 2);
             liquidCapacity = 40f;
-            explodeOnFull = true;
-
-            consumeLiquid(Liquids.neoplasm, 4f / 60f);
-            consumeItem(Items.tungsten);
-
-
-            itemDuration = 60f * 2f;
+            craftTime = 60f;
+            size = 3;
+            hasPower = true;
+            hasLiquids = false;
+            envEnabled |= Env.space | Env.underwater;
+            envDisabled = Env.none;
             itemCapacity = 30;
-            outputLiquid = new LiquidStack(Liquids.neoplasm, 6f / 60f);
+            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawArcSmelt(),new DrawRegion("-center"),
+            new DrawRegion("-bottom"),
+            new DrawLiquidTile(Liquids.arkycite, 3f),
+            new DrawCircles(){{
+                color = Color.valueOf("feb380").a(0.5f);
+                strokeMax = 3.25f;
+                radius = 65f / 4f;
+                amount = 5;
+                timeScl = 200f;
+            }}, new DrawDefault());
+            fogRadius = 3;
+            researchCost = with(Items.beryllium, 150, Items.graphite, 50);
+            ambientSound = Sounds.smelter;
+            ambientSoundVolume = 0.12f;
 
-
-            ambientSound = Sounds.bioLoop;
-            ambientSoundVolume = 0.1f;
-
-
-
-
-            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.neoplasm), new DrawDefault());
-
+            consumeItems(with(Items.tungsten, 2));
+            consumeLiquid(Liquids.neoplasm, 4f / 60f);
+            consumePower(5f);
         }};
 
 }
