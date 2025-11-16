@@ -8,6 +8,7 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
 import arc.util.*;
+import hyperplasia.content.utils.NeoFx;
 import mindustry.ai.*;
 import mindustry.ai.types.*;
 import mindustry.content.Bullets;
@@ -149,12 +150,12 @@ gastritis = new NeoplasmUnitType("gastritis") {{
     legForwardScl = 0.9f;
     alwaysShootWhenMoving = true;
 
-    abilities.add(new LiquidExplodeAbility(){{
-    liquid = Liquids.neoplasm;
-    amount = 500f;      // how much liquid to spawn
-    range = tilesize * 4f;
-          // splash radius
-    }});
+                    abilities.add(new LiquidExplodeAbility() {
+                        {
+                            this.liquid = Liquids.neoplasm;
+                            
+                        }
+                    });
 
 
 
@@ -296,29 +297,31 @@ weapons.add(new Weapon() {{
         splashDamage = 20f;
         splashDamageRadius = 28f;
 
-        fragBullets = 8;
-        fragSpread = 120f;
-        fragLifeMin = 0.6f;
+                    fragBullets = 3;
+                    fragLifeMin = 0f;
+                    fragRandomSpread = 30f;
 
-        fragBullet = new BasicBulletType(1f, 12f) {{
-            lifetime = 20f;
-            width = 10f;
-            height = 8f;
-            splashDamage = 10f;
-            splashDamageRadius = 16f;
-            trailColor = Pal.neoplasm2;
-            frontColor = Pal.neoplasm1;
-            backColor = Pal.neoplasm2;
-            fragSpread = 120f;
-            fragLifeMin = 0.6f;
-abilities.add(new LiquidExplodeAbility(){{
-    liquid = Liquids.neoplasm;
-    amount = 240f;
-    puddleAmount = 20f;
-    puddleRange = 30f;
-    puddleLiquid = Liquids.neoplasm;
-}});
-        }};
+                    fragBullet = new ArtilleryBulletType(9f, 20){{
+                        collidesGround = true;
+                        width = 10f;
+                        height = 10f;
+                        pierce = false;
+                        pierceBuilding = false;
+                        
+                        puddleLiquid = Liquids.neoplasm;
+                        puddleAmount = 20f;
+                        puddleRange = 4f;
+                        puddles = 3;
+
+                        lifetime = 20f;
+                        splashDamage = 15f;
+                        splashDamageRadius = 10f;
+                                            trailLength = 9;
+                        trailWidth = 3.1f;
+                        frontColor = Pal.neoplasm1;
+                        backColor = Pal.neoplasm2;
+                        trailColor = Pal.neoplasm2;
+                    }};
 
         frontColor = Pal.neoplasm1;
         backColor = Pal.neoplasm2;
@@ -326,7 +329,13 @@ abilities.add(new LiquidExplodeAbility(){{
         trailEffect = Fx.shootSmallSmoke;
         trailWidth = 1.3f;
         trailLength = 8;
-
+                        abilities.add(new MoveEffectAbility(){{
+                        effect = NeoFx.neoMissileTrail;
+                        rotation = 180f;
+                        y = -9f;
+                        color = Color.grays(0.6f).lerp(Pal.redLight, 0.5f).a(0.4f);
+                        interval = 7f;
+                    }});
     }};
 }});
 

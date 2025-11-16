@@ -3,6 +3,7 @@ package hyperplasia.content;
 import arc.graphics.*;
 import arc.math.*;
 import arc.struct.*;
+import hyperplasia.content.utils.NeoLiquidBulletType;
 import mindustry.*;
 import mindustry.content.Fx;
 import mindustry.content.Items;
@@ -45,9 +46,114 @@ import static mindustry.type.ItemStack.*;
 
 public class NeoBlocks {
     
-        public static Block neoplasmSynthesizer, chitinFabricator;
+        public static Block neoplasmSynthesizer, chitinFabricator,
+        
+        
+        hemophilia, impetigo
+        ;
 
     public static void load(){
+
+            impetigo = new ItemTurret("impetigo"){{
+            requirements(Category.turret, with(Items.beryllium, 150, Items.silicon, 200, Items.graphite, 200, Items.tungsten, 50));
+
+            ammo(
+            Items.graphite, new BasicBulletType(8f, 41){{
+                knockback = 4f;
+                width = 25f;
+                hitSize = 7f;
+                height = 20f;
+                shootEffect = Fx.shootBigColor;
+                smokeEffect = Fx.shootSmokeSquareSparse;
+                ammoMultiplier = 1;
+                hitColor = backColor = trailColor = Color.valueOf("ea8878");
+                frontColor = Pal.redLight;
+                trailWidth = 6f;
+                trailLength = 3;
+                hitEffect = despawnEffect = Fx.hitSquaresColor;
+                buildingDamageMultiplier = 0.2f;
+            }},
+            Items.oxide, new BasicBulletType(8f, 90){{
+                knockback = 3f;
+                width = 25f;
+                hitSize = 7f;
+                height = 20f;
+                shootEffect = Fx.shootBigColor;
+                smokeEffect = Fx.shootSmokeSquareSparse;
+                ammoMultiplier = 2;
+                hitColor = backColor = trailColor = Color.valueOf("a0b380");
+                frontColor = Color.valueOf("e4ffd6");
+                trailWidth = 6f;
+                trailLength = 3;
+                hitEffect = despawnEffect = Fx.hitSquaresColor;
+                buildingDamageMultiplier = 0.2f;
+            }},
+            Items.silicon, new BasicBulletType(8f, 35){{
+                knockback = 3f;
+                width = 25f;
+                hitSize = 7f;
+                height = 20f;
+                homingPower = 0.045f;
+                shootEffect = Fx.shootBigColor;
+                smokeEffect = Fx.shootSmokeSquareSparse;
+                ammoMultiplier = 1;
+                hitColor = backColor = trailColor = Pal.graphiteAmmoBack;
+                frontColor = Pal.graphiteAmmoFront;
+                trailWidth = 6f;
+                trailLength = 6;
+                hitEffect = despawnEffect = Fx.hitSquaresColor;
+                buildingDamageMultiplier = 0.2f;
+            }}
+            );
+
+            shoot = new ShootSpread(15, 4f);
+
+            coolantMultiplier = 15f;
+
+            inaccuracy = 0.2f;
+            velocityRnd = 0.17f;
+            shake = 1f;
+            ammoPerShot = 3;
+            maxAmmo = 30;
+            consumeAmmoOnce = true;
+            targetUnderBlocks = false;
+
+            shootSound = Sounds.shootAltLong;
+            shootY = 5f;
+            outlineColor = Pal.neoplasmOutline;
+            size = 3;
+            envEnabled |= Env.space;
+            reload = 30f;
+            recoil = 2f;
+            range = 125;
+            shootCone = 40f;
+            scaledHealth = 210;
+            rotateSpeed = 3f;
+
+            coolant = consume(new ConsumeLiquid(Liquids.water, 15f / 60f));
+            limitRange(25f);
+        }};
+
+            hemophilia = new LiquidTurret("hemophilia"){{
+            requirements(Category.turret, with(Items.metaglass, 45, Items.lead, 75, Items.copper, 25));
+            ammo(
+                Liquids.water,new NeoLiquidBulletType(Liquids.water){{
+                    knockback = 0.7f;
+                    drag = 0.01f;
+                    layer = Layer.bullet - 2f;
+                }}
+            );
+            size = 2;
+            recoil = 0f;
+            reload = 3f;
+            inaccuracy = 5f;
+            shootCone = 50f;
+            liquidCapacity = 10f;
+            shootEffect = Fx.shootLiquid;
+            range = 110f;
+            scaledHealth = 250;
+            flags = EnumSet.of(BlockFlag.turret, BlockFlag.extinguisher);
+        }};
 
             neoplasmSynthesizer = new ConsumeGenerator("neoplasm-synthesizer"){{
             requirements(Category.crafting, with(Items.oxide, 40, Items.silicon, 60, Items.graphite, 80));
@@ -97,20 +203,12 @@ public class NeoBlocks {
             craftTime = 60f;
             size = 3;
             hasPower = true;
-            hasLiquids = false;
+            hasLiquids = true;
             envEnabled |= Env.space | Env.underwater;
             envDisabled = Env.none;
             itemCapacity = 30;
-            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawArcSmelt(),new DrawRegion("-center"),
-            new DrawRegion("-bottom"),
-            new DrawLiquidTile(Liquids.arkycite, 3f),
-            new DrawCircles(){{
-                color = Color.valueOf("feb380").a(0.5f);
-                strokeMax = 3.25f;
-                radius = 65f / 4f;
-                amount = 5;
-                timeScl = 200f;
-            }}, new DrawDefault());
+            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawCrucibleFlame(),new DrawRegion("-center"),
+            new DrawDefault());
             fogRadius = 3;
             researchCost = with(Items.beryllium, 150, Items.graphite, 50);
             ambientSound = Sounds.smelter;

@@ -10,13 +10,19 @@ public class NeoItems {
     public static Item
     chitin;
 
-    public static final Seq<Item> neoItems  = new Seq<>();
+    public static final Seq<Item> neoItems = new Seq<>();
+
 
         public static void load() {
         chitin = new Item("chitin", Color.valueOf("#52453f")) {{
-            hardness = 2;
-            cost = 0.7f;
+            hardness = 6;
+            cost = 1.5f;
+            healthScaling = 0.8f;
             shownPlanets.add(Planets.erekir);
         }};
+
+        neoItems.addAll(
+        chitin
+        );
     }
 }

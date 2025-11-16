@@ -23,9 +23,9 @@ public class ExampleJavaMod extends Mod{
     @Override
     public void loadContent(){
         Log.info("Loading some example content.");
+        NeoItems.load();
         NeoUnitTypes.load();
         NeoBlocks.load();
-        NeoItems.load();
     }
 
 }
