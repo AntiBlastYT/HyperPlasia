@@ -3,11 +3,12 @@ package hyperplasia.content;
 import arc.graphics.*;
 import arc.math.*;
 import arc.struct.*;
-import hyperplasia.content.utils.NeoLiquidBulletType;
+import hyperplasia.content.utils.*;
 import mindustry.*;
 import mindustry.content.Fx;
 import mindustry.content.Items;
 import mindustry.content.Liquids;
+import mindustry.content.UnitTypes;
 import mindustry.entities.*;
 import mindustry.entities.abilities.*;
 import mindustry.entities.bullet.*;
@@ -37,6 +38,7 @@ import mindustry.world.blocks.production.*;
 import mindustry.world.blocks.sandbox.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.world.blocks.units.*;
+import mindustry.world.blocks.units.UnitFactory.UnitPlan;
 import mindustry.world.consumers.*;
 import mindustry.world.draw.*;
 import mindustry.world.meta.*;
@@ -47,7 +49,8 @@ import static mindustry.type.ItemStack.*;
 public class NeoBlocks {
     
         public static Block neoplasmSynthesizer, chitinFabricator,
-        
+
+        gastritisSpawn,
         
         hemophilia, impetigo
         ;
@@ -134,25 +137,16 @@ public class NeoBlocks {
             limitRange(25f);
         }};
 
-            hemophilia = new LiquidTurret("hemophilia"){{
-            requirements(Category.turret, with(Items.metaglass, 45, Items.lead, 75, Items.copper, 25));
-            ammo(
-                Liquids.water,new NeoLiquidBulletType(Liquids.water){{
-                    knockback = 0.7f;
-                    drag = 0.01f;
-                    layer = Layer.bullet - 2f;
-                }}
-            );
-            size = 2;
-            recoil = 0f;
-            reload = 3f;
-            inaccuracy = 5f;
-            shootCone = 50f;
-            liquidCapacity = 10f;
-            shootEffect = Fx.shootLiquid;
-            range = 110f;
-            scaledHealth = 250;
-            flags = EnumSet.of(BlockFlag.turret, BlockFlag.extinguisher);
+            gastritisSpawn = new NeoSpawner("gastritis-spawner"){{
+            requirements(Category.units, with(Items.beryllium, 1));
+            consumeItems(with(Items.beryllium, 100));
+
+            size = 5;
+
+            spawn = UnitTypes.renale;
+            spawnEffect = Fx.neoplasiaSmoke;
+            spawnColor = Liquids.hydrogen.color;
+            spawnTime = 120f;
         }};
 
             neoplasmSynthesizer = new ConsumeGenerator("neoplasm-synthesizer"){{
