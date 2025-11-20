@@ -59,7 +59,7 @@ public class NeoUnitTypes {
             outlines = true;
             drawCell = false;
 
-            legCount = 4;
+            legCount = 6;
             baseLegStraightness = 0.25f;
             legStraightness = 0.1f;
             legLength = 40f;

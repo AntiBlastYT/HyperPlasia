@@ -4,6 +4,7 @@ import arc.graphics.*;
 import arc.math.*;
 import arc.struct.*;
 import hyperplasia.content.utils.*;
+import hyperplasia.content.utils.NeoSpawner;
 import mindustry.*;
 import mindustry.content.Fx;
 import mindustry.content.Items;
@@ -139,14 +140,16 @@ public class NeoBlocks {
 
             gastritisSpawn = new NeoSpawner("gastritis-spawner"){{
             requirements(Category.units, with(Items.beryllium, 1));
-            consumeItems(with(Items.beryllium, 100));
-
+            unitType = NeoUnitTypes.gastritis;
             size = 5;
-
-            spawn = UnitTypes.renale;
-            spawnEffect = Fx.neoplasiaSmoke;
+            configurable = false;
+            fogRadius = 5;
+            consumePower(1.5f);
+            rotate = false;
+            unitBuildTime = 60f * 8f;
+            itemCapacity = 200;
+            spawnEffect = NeoFx.smokeColor;
             spawnColor = Liquids.hydrogen.color;
-            spawnTime = 120f;
         }};
 
             neoplasmSynthesizer = new ConsumeGenerator("neoplasm-synthesizer"){{
