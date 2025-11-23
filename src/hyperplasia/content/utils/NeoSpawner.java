@@ -160,7 +160,6 @@ if(ballRegion.found()){
                 buildProgress += edelta() / unitBuildTime;
                 totalProgress += edelta();
 
-                // ❌ removed continuous spawnEffect (the spam)
 
                 if(buildProgress >= 1f){
                     if(!net.client()){
@@ -174,13 +173,15 @@ if(ballRegion.found()){
                         unit.rotation = 90f;
                         unit.add();
 
-                        // ✅ now only triggers ONCE
                         if(spawnEffect != null){
                             spawnEffect.at(x, y, spawnColor != null ? spawnColor : Color.white);
                         }
 
                         Call.unitTetherBlockSpawned(tile, unit.id);
                     }
+
+                    // 🔥 IMPORTANT: reset build cycle so it keeps spawning
+                    buildProgress = 0f;
                 }
             }
         }
@@ -200,9 +201,8 @@ if(ballRegion.found()){
 
         @Override
         public boolean shouldConsume(){
-            return unit == null;
+            return true;
         }
-
 
 
         @Override

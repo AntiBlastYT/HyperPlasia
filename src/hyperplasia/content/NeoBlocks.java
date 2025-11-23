@@ -4,11 +4,11 @@ import arc.graphics.*;
 import arc.math.*;
 import arc.struct.*;
 import hyperplasia.content.utils.*;
-import hyperplasia.content.utils.NeoSpawner;
 import mindustry.*;
 import mindustry.content.Fx;
 import mindustry.content.Items;
 import mindustry.content.Liquids;
+import mindustry.content.StatusEffects;
 import mindustry.content.UnitTypes;
 import mindustry.entities.*;
 import mindustry.entities.abilities.*;
@@ -53,10 +53,141 @@ public class NeoBlocks {
 
         gastritisSpawn,
         
-        hemophilia, impetigo
+        hemophilia, impetigo, gout
         ;
 
     public static void load(){
+        
+            gout = new ItemTurret("gout"){{
+            requirements(Category.turret, with(Items.beryllium, 150, Items.silicon, 200, Items.graphite, 200, Items.tungsten, 50));
+            ammo(
+                NeoItems.synthecite, new DeaccelBullet(3f, 20){{
+                    knockback = 0.8f;
+                    lifetime = 80f;
+                    width = height = 14f;
+                    collidesTiles = false;
+                    splashDamageRadius = 25f * 2.75f;
+                    splashDamage = 90f;
+
+                    backColor = hitColor = trailColor = Pal.neoplasm2;
+                    frontColor = Pal.neoplasm1;
+                    deaccelAmount = 0.3f;
+            
+                    fragBullets = 4;       // spread angle
+                    fragVelocityMin = 1.3f;
+                    fragVelocityMax = 1.8f;
+                    hitEffect = despawnEffect = new MultiEffect(
+                            NeoFx.gouteffect,
+                            new WaveEffect(){{
+                                startDelay = 0f;
+                                sizeFrom = 3f;
+                                sizeTo = 23f;
+                                lifetime = 15f;
+                                strokeFrom = 5.5f;
+                                colorFrom = Pal.neoplasm2;
+                                colorTo = Pal.neoplasm2;
+                            }}
+                        );
+
+                    fragBullet = new DeaccelBullet(1.5f, 24f){{
+                    deaccelAmount = 0.025f; 
+                    pulseSpeed = 0f;
+                    width = 7f;
+                    hitSize = 5f;
+                    height = 15f;
+                    pierceCap = 1;
+                    lifetime = 54f;
+                    pierceBuilding = true;
+                    hitColor = backColor = trailColor = Pal.neoplasm2;
+                    frontColor = Pal.neoplasm1;
+                    trailWidth = 1.5f;
+                    trailLength = 11;
+                    targetAir = true;
+                    hitEffect = despawnEffect = new WaveEffect(){{
+                        colorFrom = colorTo = Pal.neoplasm2;
+                        frontColor = Pal.neoplasm1;
+                        sizeTo = 4f;
+                        strokeFrom = 4f;
+                        lifetime = 10f;
+                    }};
+                    buildingDamageMultiplier = 0.3f;
+                    homingPower = 0.15f;
+                    }};
+                    
+                }}
+            );
+            shoot = new ShootMulti(new ShootPattern(), new ShootPattern() {{
+                shots = 1;
+            }}, new ShootBarrel() {{
+                shots = 2;
+                shotDelay = 4f;
+                firstShotDelay = 2f;
+                barrels = new float[]
+                        {5.35f, -14f, -25f, -5.35f, -14f, 25f};
+            }});
+            clipSize = 32f;
+            xRand = 3f;
+            outlineColor = Pal.darkOutline;
+            targetAir = false;
+            size = 3;
+            shoot.shots = 3;
+            inaccuracy = 12f;
+            reload = 60f;
+            ammoEjectBack = 5f;
+            ammoPerShot = 2;
+            velocityRnd = 0.2f;
+            scaleLifetimeOffset = 1f / 9f;
+            recoil = 1.5f;
+            shake = 2f;
+            range = 150f;
+            minRange = 50f;
+            coolant = consumeCoolant(0.3f);
+                shootEffect = new MultiEffect(Fx.shootTitan, new WaveEffect(){{
+                    colorFrom = colorTo = Pal.neoplasm2;
+                    sizeTo = 16f;
+                    lifetime = 10f;
+                    strokeFrom = 4f;
+                }});
+            scaledHealth = 230;
+            shootSound = Sounds.artillery;
+            drawer = new DrawTurret("reinforced-"){{
+                parts.addAll(
+                    
+                (new RegionPart("-rightblade"){{
+                    progress = PartProgress.warmup;
+                    moveRot = -5f;
+                    mirror = false;
+                    moves.add(new PartMove(PartProgress.recoil, 0f, -2f, -2f));
+                    heatColor = Color.red;
+                    layerOffset = -0.01f;
+                }}),
+                (new RegionPart("-leftblade"){{
+                    progress = PartProgress.warmup;
+                    moveRot = 5f;
+                    mirror = false;
+                    moves.add(new PartMove(PartProgress.recoil, 0f, -2f, 2f));
+                    heatColor = Color.red;
+                    layerOffset = -0.01f;
+                }}),
+                    new RegionPart("-right"){{
+                    progress = PartProgress.warmup;
+                    moveRot = -2.5f;
+                    mirror = false;
+                    moves.add(new PartMove(PartProgress.recoil, 0f, -1f, -2f));
+                    heatColor = Color.red;
+                    layerOffset = -0.01f;
+                }},
+                (new RegionPart("-left"){{
+                    progress = PartProgress.warmup;
+                    moveRot = 2.5f;
+                    mirror = false;
+                    moves.add(new PartMove(PartProgress.recoil, 0f, -1f, 2f));
+                    heatColor = Color.red;
+                    layerOffset = -0.01f;
+                }}));;
+            }};
+        }};
+
 
             impetigo = new ItemTurret("impetigo"){{
             requirements(Category.turret, with(Items.beryllium, 150, Items.silicon, 200, Items.graphite, 200, Items.tungsten, 50));
@@ -138,6 +269,10 @@ public class NeoBlocks {
             limitRange(25f);
         }};
 
+
+
+
+
             gastritisSpawn = new NeoSpawner("gastritis-spawner"){{
             requirements(Category.units, with(Items.beryllium, 1));
             unitType = NeoUnitTypes.gastritis;
@@ -146,11 +281,15 @@ public class NeoBlocks {
             fogRadius = 5;
             consumePower(1.5f);
             rotate = false;
-            unitBuildTime = 60f * 8f;
+            unitBuildTime = 60f * 16f;
             itemCapacity = 200;
             spawnEffect = NeoFx.smokeColor;
             spawnColor = Liquids.hydrogen.color;
         }};
+
+
+
+
 
             neoplasmSynthesizer = new ConsumeGenerator("neoplasm-synthesizer"){{
             requirements(Category.crafting, with(Items.oxide, 40, Items.silicon, 60, Items.graphite, 80));
@@ -204,7 +343,8 @@ public class NeoBlocks {
             envEnabled |= Env.space | Env.underwater;
             envDisabled = Env.none;
             itemCapacity = 30;
-            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawCrucibleFlame(),new DrawRegion("-center"),
+            drawer = new DrawMulti(new DrawRegion("-center"), new DrawLiquidTile(Liquids.neoplasm), new DrawRegion("-bottom"),
+            new DrawDefault(), new DrawCrucibleFlame(),
             new DrawDefault());
             fogRadius = 3;
             researchCost = with(Items.beryllium, 150, Items.graphite, 50);
