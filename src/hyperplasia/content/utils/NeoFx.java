@@ -149,5 +149,24 @@ public class NeoFx {
             });
         }
 
-    }).layer(Layer.bullet - 1f);
+    }).layer(Layer.bullet - 1f),
+
+    /** Small spore that drifts up out of a unit spawner pit. */
+    spawnerSpore = new Effect(55f, e -> {
+        float wiggle = Mathf.sin(e.id * 1.3f + e.time * 0.2f) * 1.6f * e.finpow();
+        Draw.color(e.color, Pal.lighterOrange, e.fin() * 0.6f);
+        Draw.alpha(e.fslope() * 0.9f);
+        Fill.circle(e.x + wiggle, e.y + e.finpow() * 10f, 0.5f + e.fslope() * 1.1f);
+        Draw.reset();
+    }),
+
+    /** Streak that races inward to the centre of a spawner. Spawn it on the rim with rotation pointing inwards. */
+    spawnerCharge = new Effect(22f, 40f, e -> {
+        float dist = e.finpow() * 15f;
+        float len = 1.5f + e.fslope() * 5f;
+        Draw.color(Color.white, e.color, e.fin());
+        Lines.stroke(0.5f + e.fslope() * 1.2f);
+        Lines.lineAngle(e.x + Angles.trnsx(e.rotation, dist), e.y + Angles.trnsy(e.rotation, dist), e.rotation, len);
+        Draw.reset();
+    });
 }
