@@ -8,7 +8,7 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
 import arc.util.*;
-import hyperplasia.content.utils.NeoFx;
+import hyperplasia.content.utils.*;
 import mindustry.ai.*;
 import mindustry.ai.types.*;
 import mindustry.content.Bullets;
@@ -28,7 +28,6 @@ import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
-import mindustry.type.ammo.*;
 import mindustry.type.unit.*;
 import mindustry.type.weapons.*;
 import mindustry.world.meta.*;
@@ -41,7 +40,7 @@ import static mindustry.Vars.*;
 
 public class NeoUnitTypes {
 
-    public static NeoplasmUnitType spidern, gastritis;
+    public static NeoplasmUnitType spidern, gastritis, musk;
 
     public static void load(){
 
@@ -82,7 +81,7 @@ public class NeoUnitTypes {
                 x = -4;
                 y = -3;
                 recoil = 2;
-                shootSound = Sounds.shootAltLong;
+                shootSound = NeoSounds.shootAltLong;
                 shootY = 4;
                 reload = 90;
                 bullet = new BasicBulletType(8f, 60) {{
@@ -104,7 +103,7 @@ public class NeoUnitTypes {
                 mirror = false;
                 x = 6f;
                 y = 6f;
-                shootSound = Sounds.shootAlt;
+                shootSound = NeoSounds.shootAlt;
                 shootY = 4;
                 reload = 160;
                 inaccuracy = 7;
@@ -256,9 +255,9 @@ gastritis = new NeoplasmUnitType("gastritis") {{
                     trailEffect = Fx.disperseTrail;
                     missileAccelTime = 100f;
                     lowAltitude = true;
-                    loopSound = Sounds.missileTrail;
+                    loopSound = NeoSounds.missileTrail;
                     loopSoundVolume = 0.6f;
-                    deathSound = Sounds.largeExplosion;
+                    deathSound = NeoSounds.largeExplosion;
                     targetAir = false;
                     targetUnderBlocks = false;
 
@@ -395,5 +394,134 @@ weapons.add(new Weapon() {{
     }});
 }};
 
+        musk = new LivingNeoplasmUnitType("musk") {{
+            constructor = LegsUnit::create;
+
+            //tier 3 tank: slow, huge health pool, heavy armor
+            speed = 0.3f;
+            drag = 0.24f;
+            hitSize = 34f;
+            rotateSpeed = 1.1f;
+            health = 11000;
+            armor = 14f;
+            fogRadius = 36f;
+            targetAir = false;
+            outlines = true;
+            drawCell = false;
+
+            lockLegBase = true;
+            legContinuousMove = true;
+            legGroupSize = 2;
+            legStraightness = 0.4f;
+            baseLegStraightness = 0.5f;
+            legMaxLength = 1.3f;
+            legCount = 4;
+            legLength = 10f;
+            legForwardScl = 0.7f;
+            legMoveSpace = 1.2f;
+            legBaseOffset = 2f;
+            rippleScale = 2f;
+            stepShake = 0.5f;
+            legExtension = -5f;
+            legBaseOffset = 5f;
+
+            legSplashDamage = 32;
+            legSplashRange = 30;
+            drownTimeMultiplier = 0.5f;
+
+            hovering = true;
+            shadowElevation = 0.3f;
+            groundLayer = Layer.legUnit;
+
+            pulseAmount = 0.05f;
+            pulseMinSpeed = 0.05f;
+            pulseMaxSpeed = 0.1f;
+
+            cleanOutlines = true;
+            outlinedParts.add("-foot", "-leg", "-body", "-head");
+
+            abilities.add(new LiquidExplodeAbility() {{
+                liquid = Liquids.neoplasm;
+            }});
+
+            neoplasmClouds = true;
+
+            //the head: musk-head-left / musk-head-right are two halves drawn on top of each other
+            //(closed). while the unit has a target they split open, then snap shut when it bites
+            weapons.add(new Weapon("hyperplasia-musk-head") {{
+                mirror = false;
+                rotate = false;
+                x = 0f;
+                y = 13f;
+                shootY = 6f;
+                top = true;
+                layerOffset = -0.01f;
+
+                reload = 75f;
+                recoil = 0f;
+                shootCone = 25f;
+
+                //jaws have to be mostly open before it can bite
+                shootWarmupSpeed = 0.08f;
+                minWarmup = 0.85f;
+                //how fast the jaws slam shut after a bite
+                smoothReloadSpeed = 0.35f;
+
+                shootSound = NeoSounds.largeExplosion;
+
+                //open amount = warmup (target acquired) * how recharged the bite is.
+                //right after a bite the jaws are shut, then they slowly open back up
+                PartProgress jawOpen = PartProgress.warmup.mul(PartProgress.smoothReload.inv());
+
+                parts.add(new RegionPart("-left") {{
+                    mirror = false;
+                    under = false;
+                    layerOffset = 0.01f;
+                    progress = jawOpen;
+                    moveX = -5f;
+                    moveY = 2f;
+                    moveRot = 22f;
+                }});
+
+                parts.add(new RegionPart("-right") {{
+                    mirror = false;
+                    under = false;
+                    layerOffset = 0.01f;
+                    progress = jawOpen;
+                    moveX = 5f;
+                    moveY = 2f;
+                    moveRot = -22f;
+                }});
+
+                //the bite itself: an instant crushing splash right in front of the jaws
+                bullet = new BulletType(0f, 0f) {{
+                    rangeOverride = 38f;
+                    lifetime = 1f;
+                    keepVelocity = false;
+                    collides = false;
+                    collidesAir = false;
+                    absorbable = false;
+                    hittable = false;
+                    reflectable = false;
+                    despawnHit = true;
+
+                    splashDamage = 260f;
+                    splashDamageRadius = 34f;
+                    buildingDamageMultiplier = 0.7f;
+                    status = StatusEffects.slow;
+                    statusDuration = 60f;
+
+                    puddleLiquid = Liquids.neoplasm;
+                    puddles = 2;
+                    puddleAmount = 25f;
+                    puddleRange = 14f;
+
+                    hitEffect = Fx.blastExplosion;
+                    despawnEffect = Fx.blastExplosion;
+                    hitSound = NeoSounds.largeExplosion;
+                    hitColor = Pal.neoplasm1;
+                }};
+            }});
+        }};
 }
 }

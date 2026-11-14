@@ -18,6 +18,7 @@ import mindustry.world.*;
 import mindustry.world.blocks.*;
 
 import arc.Core;
+import arc.audio.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.Mathf;
@@ -42,9 +43,9 @@ public class NeoSpawner extends Block{
     public Color polyColor = Pal.accent;
 
     // ---- build visuals (all purely cosmetic) ----
-    /** Dark tone the silhouette starts as at the beginning of a build cycle. */
+    /** Flat, dark, non-glowing color of the unit silhouette. */
     public Color shadowColor = Pal.neoplasmOutline;
-    /** Mid tone of the silhouette / outline while it is being "printed". */
+    /** Color of the soft glow inside the pit (shows around the dark silhouette). */
     public Color silhouetteColor = Pal.neoplasm2;
     /** Hot tone the silhouette, beat rings, sparks and spores heat up to. */
     public Color glowColor = Pal.neoplasm1;
@@ -52,6 +53,12 @@ public class NeoSpawner extends Block{
     public Color hotColor = Pal.lighterOrange;
     /** Largest side of the silhouette, in world units, when the unit is (almost) done. The pit is ~23 units wide. */
     public float silhouetteSize = 30f;
+    /** Progress (0-1) where the silhouette starts to appear. Before this it is completely invisible. */
+    public float silhouetteStart = 0.5f;
+    /** How much of the build (0-1) the silhouette takes to fade in once it starts appearing. */
+    public float silhouetteFade = 0.15f;
+    /** Opacity of the dark silhouette once it has fully faded in. */
+    public float silhouetteAlpha = 0.85f;
     /** Extra squash/stretch of the cocoon at the end of a build. 0 disables the wobble ramp. */
     public float wobbleAmount = 0.05f;
     /** Progress (0-1) where the silhouette starts heating from dark to glowing. */
@@ -63,7 +70,58 @@ public class NeoSpawner extends Block{
     /** Screen shake when a unit pops out. 0 disables. */
     public float spawnShake = 2.5f;
 
+    // ---- optional per-effect colors. Leave null to use the palette above. ----
+    /** Glow inside the pit. Default: silhouetteColor. */
+    public @Nullable Color pitColor;
+    /** Heartbeat rings rippling out of the pit. Default: glowColor. */
+    public @Nullable Color ringColor;
+    /** Bright halo that swells at the end of a build. Default: hotColor. */
+    public @Nullable Color haloColor;
+    /** The pop when a unit spawns (flash, glow, shockwave, cocoon ghost). Default: hotColor. */
+    public @Nullable Color flashColor;
+    /** Light the block casts on the ground. Default: glowColor. */
+    public @Nullable Color lightColor;
+    /** Spores drifting out of the pit. Default: glowColor. */
+    public @Nullable Color sporeColor;
+    /** Color the spores fade to as they rise. Default: hotColor. */
+    public @Nullable Color sporeTipColor;
+    /** Sparks sucked into the pit before a spawn. Default: glowColor. */
+    public @Nullable Color sparkColor;
+    /** Bright head of those sparks. Default: white. */
+    public @Nullable Color sparkTipColor;
+
+    // ---- build sounds (set a sound to null to disable it) ----
+    /** Master volume for all the sounds below. */
+    public float sfxVolume = 1f;
+    /** Low "lub-dub" heartbeat thump while building. Gets louder and higher as the build progresses. */
+    public @Nullable Sound beatSound = NeoSounds.thump;
+    /** Wet squelches that occasionally accompany the spores. */
+    public @Nullable Sound squelchSound = NeoSounds.squelch;
+    /** Charge-up rising once the build reaches {@link #chargeStart}. */
+    public @Nullable Sound chargeSound = NeoSounds.chargeUp;
+    /** Second, sharper charge-up right before the unit pops out. */
+    public @Nullable Sound finalChargeSound = NeoSounds.chargeFinal;
+    /** Progress (0-1) where {@link #finalChargeSound} plays. */
+    public float finalChargeStart = 0.9f;
+    /** The big "it's alive" sound when the unit is finished. */
+    public @Nullable Sound completeSound = NeoSounds.unitPop;
+    /** Wet burst layered on top of the completion sound. */
+    public @Nullable Sound completeBurstSound = NeoSounds.neoplasmExplosion;
+
     private static final TextureRegion slice = new TextureRegion();
+
+    private static boolean crossed(float prev, float now, float c){
+        //handles the phase wrapping around from ~1 back to 0
+        return prev <= now ? (prev < c && now >= c) : (c > prev || c <= now);
+    }
+
+    private static void sfx(@Nullable Sound s, float x, float y, float pitch, float volume){
+        if(s != null && volume > 0.01f) s.at(x, y, pitch, volume);
+    }
+
+    private static Color pick(@Nullable Color override, Color def){
+        return override != null ? override : def;
+    }
 
     /** Smooth 0-1-0 bump centered on c with half-width w. */
     private static float bump(float x, float c, float w){
@@ -83,7 +141,7 @@ public class NeoSpawner extends Block{
         update = true;
         hasItems = true;
         itemCapacity = 200;
-        ambientSound = Sounds.respawning;
+        ambientSound = NeoSounds.respawning;
         emitLight = true;
     }
 
@@ -199,8 +257,8 @@ public class NeoSpawner extends Block{
             if(pitA > 0.004f){
                 Draw.z(bz + 0.001f);
                 Draw.blend(Blending.additive);
-                Tmp.c1.set(silhouetteColor).a(pitA);
-                Tmp.c2.set(silhouetteColor).a(0f);
+                Tmp.c1.set(pick(pitColor, silhouetteColor)).a(pitA);
+                Tmp.c2.set(pick(pitColor, silhouetteColor)).a(0f);
                 Fill.light(x, y, 20, 12f + 5f * beat, Tmp.c1, Tmp.c2);
                 Draw.blend();
             }
@@ -222,50 +280,27 @@ public class NeoSpawner extends Block{
             if(flash > 0.01f && ballRegion.found()){
                 float grow = 1f + Interp.pow3Out.apply(1f - flash) * 0.3f;
                 Draw.z(bz + 0.0025f);
-                Draw.mixcol(hotColor, 0.85f);
+                Draw.mixcol(pick(flashColor, hotColor), 0.85f);
                 Draw.color(Color.white, flash * flash);
                 Draw.rect(ballRegion, x, y, ballRegion.width * Draw.scl * grow, ballRegion.height * Draw.scl * grow);
                 Draw.mixcol();
                 Draw.color();
             }
 
-            //---- silhouette of the unit being built ----
+            //---- silhouette of the unit being built: invisible at first, then a flat dark shape that fades in and grows from 0 to 1 ----
             TextureRegion sil = silhouetteRegion();
-            float sw = 0f, sh = 0f, fullW = 0f, fullH = 0f, sx = x, sy = y, fade = 0f, vis = 0f;
-            if(sil != null){
+            if(sil != null && prog > silhouetteStart){
+                float appear = Interp.smooth.apply(Mathf.curve(prog, silhouetteStart, Math.min(1f, silhouetteStart + Math.max(0.001f, silhouetteFade))));
+                float grow = Interp.pow2Out.apply(Mathf.curve(prog, silhouetteStart, 1f));
+
                 //fit by the sprite's largest side so padded icons don't overflow the pit
                 float fit = silhouetteSize / (Math.max(sil.width, sil.height) * Draw.scl);
-                fullW = sil.width * Draw.scl * fit;
-                fullH = sil.height * Draw.scl * fit;
+                float sw = sil.width * Draw.scl * fit * grow * (1f + wob * 0.5f * wave + beat * 0.03f);
+                float sh = sil.height * Draw.scl * fit * grow * (1f - wob * 0.4f * wave + beat * 0.03f);
+                float vis = 0.4f + 0.6f * act; //dims when stalled / unpowered
 
-                float grow = Mathf.lerp(0.72f, 1f, Interp.pow2Out.apply(prog));
-                sw = fullW * grow * (1f + wob * 0.5f * wave + beat * 0.03f);
-                sh = fullH * grow * (1f - wob * 0.4f * wave + beat * 0.03f);
-                sx = x + ox * 0.6f;
-                sy = y + oy * 0.6f;
-                fade = Mathf.curve(prog, 0f, 0.12f);
-                vis = 0.4f + 0.6f * act; //dims when stalled / unpowered
-
-                //outline (blueprint edge): four diagonal offsets of the silhouette
-                Draw.z(bz + 0.003f);
-                Tmp.c1.set(silhouetteColor).lerp(glowColor, heat);
-                for(int i = 0; i < 4; i++){
-                    drawSil(sil, sx + Angles.trnsx(i * 90f + 45f, 0.75f), sy + Angles.trnsy(i * 90f + 45f, 0.75f),
-                        sw, sh, 0f, 1f, Tmp.c1, 0.55f * fade * vis);
-                }
-
-                //ghost of the part that is not built yet
-                Draw.z(bz + 0.004f);
-                drawSil(sil, sx, sy, sw, sh, 0f, 1f, silhouetteColor, 0.3f * fade * vis);
-
-                //the built part: fills bottom-up, dark -> crimson -> glowing orange
                 Draw.z(bz + 0.005f);
-                Tmp.c2.set(shadowColor).lerp(silhouetteColor, Mathf.clamp(prog * 1.8f)).lerp(glowColor, heat * 0.9f);
-                drawSil(sil, sx, sy, sw, sh, 0f, prog, Tmp.c2, 0.9f * fade * vis);
-
-                //scan line at the fill edge
-                Draw.z(bz + 0.006f);
-                drawSil(sil, sx, sy, sw, sh, Math.max(0f, prog - 0.05f), prog, hotColor, 0.95f * fade * vis);
+                drawSil(sil, x + ox * 0.6f, y + oy * 0.6f, sw, sh, 0f, 1f, shadowColor, silhouetteAlpha * appear * vis);
             }
 
             //---- flesh overlay, breathing with the heartbeat ----
@@ -284,36 +319,27 @@ public class NeoSpawner extends Block{
 
                 //heartbeat ring rippling out of the pit
                 if(ring){
-                    Draw.color(glowColor, (1f - rp) * heat * 0.55f * act);
+                    Draw.color(pick(ringColor, glowColor), (1f - rp) * heat * 0.55f * act);
                     Lines.stroke(0.4f + 1.4f * (1f - rp));
                     Lines.circle(x, y, Mathf.lerp(8f, 21f, Interp.pow2Out.apply(rp)));
                 }
 
+                //halo, swelling towards the end
                 if(bloom > 0.003f){
-                    //halo, swelling towards the end
-                    Tmp.c1.set(hotColor).a((bloom * 0.45f + beat * heat * 0.15f) * act);
+                    Tmp.c1.set(pick(haloColor, hotColor)).a((bloom * 0.45f + beat * heat * 0.15f) * act);
                     Tmp.c2.set(glowColor).a(0f);
                     Fill.light(x + ox, y + oy, 24, 13f + 9f * bloom + 3f * beat, Tmp.c1, Tmp.c2);
-
-                    if(sil != null){
-                        //white-hot silhouette + brighter scan line
-                        drawSil(sil, sx, sy, sw, sh, 0f, 1f, hotColor, (bloom * 0.5f + beat * heat * 0.15f) * act);
-                        drawSil(sil, sx, sy, sw, sh, Math.max(0f, prog - 0.05f), prog, Color.white, 0.5f * fade * act);
-                    }
                 }
 
-                //spawn pop: flash, expanding glow, shockwave
+                //spawn pop: expanding glow + shockwave
                 if(flash > 0.003f){
                     float e = 1f - flash;
-                    if(sil != null){
-                        float k = 1f + e * 0.2f;
-                        drawSil(sil, x, y, fullW * k, fullH * k, 0f, 1f, Color.white, flash * flash);
-                    }
-                    Tmp.c1.set(hotColor).a(flash * 0.7f);
+                    Color fc = pick(flashColor, hotColor);
+                    Tmp.c1.set(fc).a(flash * 0.7f);
                     Tmp.c2.set(glowColor).a(0f);
                     Fill.light(x, y, 28, Mathf.lerp(14f, 36f, Interp.pow2Out.apply(e)), Tmp.c1, Tmp.c2);
 
-                    Draw.color(hotColor, flash);
+                    Draw.color(fc, flash);
                     Lines.stroke(0.3f + 3.5f * flash);
                     Lines.circle(x, y, Mathf.lerp(8f, 38f, Interp.pow3Out.apply(e)));
                 }
@@ -332,7 +358,7 @@ public class NeoSpawner extends Block{
             float heat = Interp.smoother.apply(Mathf.curve(prog, heatStart, 1f));
             float beat = heartbeat(beatPhase) * heat;
             float radius = size * tilesize * (1.1f + 0.5f * heat + 0.3f * flash + 0.1f * beat);
-            Drawf.light(x, y, radius, glowColor, Mathf.clamp((0.18f + 0.45f * heat) * warmup + flash * 0.6f));
+            Drawf.light(x, y, radius, pick(lightColor, glowColor), Mathf.clamp((0.18f + 0.45f * heat) * warmup + flash * 0.6f));
         }
 
         //needs to be "unboxed" after reading, since units are read after buildings.
@@ -343,6 +369,8 @@ public class NeoSpawner extends Block{
         public float flash;
         /** visual only: heartbeat phase, 0-1. */
         public float beatPhase;
+        /** sound only: build progress and heartbeat phase on the previous tick. */
+        protected float lastProg, lastBeat;
         public @Nullable Unit unit;
 
         @Override
@@ -369,18 +397,35 @@ public class NeoSpawner extends Block{
             flash = Mathf.approachDelta(flash, 0f, 1f / 45f);
             float vp = Mathf.clamp(buildProgress);
             //the heartbeat speeds up as the unit nears completion
+            lastBeat = beatPhase;
             beatPhase = (beatPhase + Time.delta * Mathf.lerp(1f / 130f, 1f / 30f, vp * vp) * warmup) % 1f;
+
+            if(!headless){
+                //heartbeat: "lub" then a softer, higher "dub", louder and higher the closer the unit is to done
+                if(warmup > 0.2f){
+                    float bv = (0.2f + 0.6f * vp) * warmup * sfxVolume;
+                    float bp = Mathf.lerp(0.55f, 0.85f, vp);
+                    if(crossed(lastBeat, beatPhase, 0.07f)) sfx(beatSound, x, y, bp, bv);
+                    if(crossed(lastBeat, beatPhase, 0.27f)) sfx(beatSound, x, y, bp * 1.12f, bv * 0.6f);
+
+                    //rising charge-ups on the way to completion
+                    if(lastProg < chargeStart && vp >= chargeStart) sfx(chargeSound, x, y, 1f, 0.7f * sfxVolume);
+                    if(lastProg < finalChargeStart && vp >= finalChargeStart) sfx(finalChargeSound, x, y, 1f, 0.8f * sfxVolume);
+                }
+                lastProg = vp;
+            }
 
             if(!headless && warmup > 0.2f){
                 //spores drifting up out of the pit, more of them the further along we are
                 if(Mathf.chance(Time.delta * 0.05f * warmup * (0.3f + vp))){
-                    NeoFx.spawnerSpore.at(x + Mathf.range(8f), y + Mathf.range(8f), glowColor);
+                    if(Mathf.chance(0.2)) sfx(squelchSound, x, y, Mathf.random(0.5f, 0.8f), (0.12f + 0.2f * vp) * sfxVolume);
+                    NeoFx.spawnerSpore.at(x + Mathf.range(8f), y + Mathf.range(8f), 0f, pick(sporeColor, glowColor), pick(sporeTipColor, hotColor));
                 }
                 //sparks sucked into the pit right before the spawn
                 float charge = Mathf.curve(vp, chargeStart, 1f);
                 if(charge > 0f && Mathf.chance(Time.delta * 0.4f * charge * warmup)){
                     float a = Mathf.random(360f);
-                    NeoFx.spawnerCharge.at(x + Angles.trnsx(a, 19f), y + Angles.trnsy(a, 19f), a + 180f, glowColor);
+                    NeoFx.spawnerCharge.at(x + Angles.trnsx(a, 19f), y + Angles.trnsy(a, 19f), a + 180f, pick(sparkColor, glowColor), pick(sparkTipColor, Color.white));
                 }
             }
 
@@ -418,6 +463,12 @@ public class NeoSpawner extends Block{
             Fx.spawn.at(x, y);
             buildProgress = 0f;
             flash = 1f;
+            lastProg = 0f;
+            if(!headless){
+                sfx(completeSound, x, y, 0.9f, sfxVolume);
+                sfx(completeBurstSound, x, y, 1.1f, 0.6f * sfxVolume);
+                Time.run(5f, () -> sfx(squelchSound, x, y, 0.55f, 0.9f * sfxVolume));
+            }
             if(spawnShake > 0f && !headless) Effect.shake(spawnShake, spawnShake * 3f, this);
             if(net.client()){
                 readUnitId = id;

@@ -149,7 +149,7 @@ public class NeoBlocks {
                     strokeFrom = 4f;
                 }});
             scaledHealth = 230;
-            shootSound = Sounds.artillery;
+            shootSound = NeoSounds.artillery;
             drawer = new DrawTurret("reinforced-"){{
                 parts.addAll(
                     
@@ -253,7 +253,7 @@ public class NeoBlocks {
             consumeAmmoOnce = true;
             targetUnderBlocks = false;
 
-            shootSound = Sounds.shootAltLong;
+            shootSound = NeoSounds.shootAltLong;
             shootY = 5f;
             outlineColor = Pal.neoplasmOutline;
             size = 3;
@@ -285,6 +285,38 @@ public class NeoBlocks {
             itemCapacity = 200;
             spawnEffect = NeoFx.smokeColor;
             spawnColor = Liquids.hydrogen.color;
+
+            // ---- spawner colors: change these to recolor the whole build animation ----
+            shadowColor = Pal.neoplasmOutline;   // flat dark silhouette of the unit being built
+            silhouetteColor = Pal.neoplasm2;     // soft glow inside the pit
+            glowColor = Pal.neoplasm1;           // beat rings, spores, sparks, light, halo edge
+            hotColor = Pal.lighterOrange;        // cocoon heat, halo core, spawn flash, spore tips
+
+            // ---- silhouette timing ----
+            silhouetteStart = 0.5f;              // invisible until the build is this far along (0-1)
+            silhouetteFade = 0.15f;              // how long it takes to fade in after that
+            silhouetteAlpha = 0.85f;             // max opacity of the dark silhouette
+
+            // ---- spawner sounds (set any of them to null to turn it off) ----
+            sfxVolume = 1f;                          // master volume for the sounds below
+            beatSound = NeoSounds.thump;             // heartbeat thump while building
+            squelchSound = NeoSounds.squelch;        // wet squelches with the spores
+            chargeSound = NeoSounds.chargeUp;        // charge-up at chargeStart (70% by default)
+            finalChargeSound = NeoSounds.chargeFinal;// sharper charge-up right before the spawn
+            finalChargeStart = 0.9f;                 // build progress where that one plays
+            completeSound = NeoSounds.unitPop;       // unit finished
+            completeBurstSound = NeoSounds.neoplasmExplosion; // wet burst layered on top
+
+            // ---- optional: color individual effects (null = use the colors above) ----
+            // pitColor = Pal.neoplasm2;         // glow inside the pit
+            // ringColor = Pal.neoplasm1;        // heartbeat rings
+            // haloColor = Pal.lighterOrange;    // halo at the end of the build
+            // flashColor = Pal.lighterOrange;   // pop when the unit spawns
+            // lightColor = Pal.neoplasm1;       // light cast on the ground
+            // sporeColor = Pal.neoplasm1;       // spores drifting out of the pit
+            // sporeTipColor = Pal.lighterOrange;// spores fade to this
+            // sparkColor = Pal.neoplasm1;       // sparks sucked into the pit
+            // sparkTipColor = Color.white;      // bright head of the sparks
         }};
 
 
@@ -309,11 +341,11 @@ public class NeoBlocks {
             explosionDamage = 500;
             explodeEffect = new MultiEffect(Fx.bigShockwave, new WrapEffect(Fx.titanSmoke, Liquids.neoplasm.color), Fx.neoplasmSplat);
             
-            explodeSound = Sounds.largeExplosion;
+            explodeSound = NeoSounds.neoplasmExplosion;
 
             powerProduction = 12f;
 
-            ambientSound = Sounds.bioLoop;
+            ambientSound = NeoSounds.bioLoop;
             ambientSoundVolume = 0.1f;
 
             explosionPuddles = 90;
@@ -327,11 +359,14 @@ public class NeoBlocks {
 
 
 
-            drawer = new DrawMulti(new DrawBlurSpin("-rotator", 6f), new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.neoplasm), new DrawDefault());
+            drawer = new DrawMulti(
+                new DrawBlurSpin("-rotator", 6f),
+                 new DrawRegion("-bottom"),
+                  new DrawLiquidTile(Liquids.neoplasm), new DrawDefault());
          
         }};
 
-            chitinFabricator = new GenericCrafter("chitin-fabricator"){{
+            chitinFabricator = new FlashCrafter("chitin-fabricator"){{
             requirements(Category.crafting, with(Items.tungsten, 60, Items.silicon, 60, Items.beryllium, 110));
             craftEffect = Fx.none;
             outputItem = new ItemStack(NeoItems.chitin, 2);
@@ -343,12 +378,24 @@ public class NeoBlocks {
             envEnabled |= Env.space | Env.underwater;
             envDisabled = Env.none;
             itemCapacity = 30;
-            drawer = new DrawMulti(new DrawRegion("-center"), new DrawLiquidTile(Liquids.neoplasm), new DrawRegion("-bottom"),
-            new DrawDefault(), new DrawCrucibleFlame(),
-            new DrawDefault());
+            drawer = new DrawMulti(
+                new DrawRegion("-bottom"),
+                new DrawLiquidTile(Liquids.neoplasm, 2f),
+                new DrawBubbles(NeoColor.neoFleshOutline){{
+                    sides = 10;
+                    recurrence = 3f;
+                    spread = 6;
+                    radius = 1.5f;
+                    amount = 20;
+                }},
+                new DrawRegion(),
+                new DrawLiquidOutputs(),
+                new DrawNeoTornado(){{
+                }}
+            );
             fogRadius = 3;
             researchCost = with(Items.beryllium, 150, Items.graphite, 50);
-            ambientSound = Sounds.smelter;
+            ambientSound = NeoSounds.smelter;
             ambientSoundVolume = 0.12f;
 
             consumeItems(with(Items.tungsten, 2));
@@ -356,5 +403,7 @@ public class NeoBlocks {
             consumePower(5f);
         }};
 
+        // ---- neoplasm can't infect these blocks (no draining, no spreading, no damage) ----
+        NeoplasmImmunity.add(gout, hemophilia, impetigo, gastritisSpawn, neoplasmSynthesizer, chitinFabricator);
 }
 }
