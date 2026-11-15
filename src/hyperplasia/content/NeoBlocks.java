@@ -61,7 +61,7 @@ public class NeoBlocks {
             gout = new ItemTurret("gout"){{
             requirements(Category.turret, with(Items.beryllium, 150, Items.silicon, 200, Items.graphite, 200, Items.tungsten, 50));
             ammo(
-                NeoItems.synthecite, new DeaccelBullet(3f, 20){{
+                NeoItems.synthecite, new DeaccelBullet(5f, 20){{
                     knockback = 0.8f;
                     lifetime = 80f;
                     width = height = 14f;
@@ -72,12 +72,25 @@ public class NeoBlocks {
                     backColor = hitColor = trailColor = Pal.neoplasm2;
                     frontColor = Pal.neoplasm1;
                     deaccelAmount = 0.3f;
+                    pulseSpeed = 0.35f;            // wobble speed of the glob
+                    pulseAmplitude = 0.3f;         // how much it swells and shrinks
+                    trailLength = 18;              // gooey tail
+                    trailWidth = 2.5f;
+                    trailEffect = NeoFx.goutDrip;  // sheds drips while flying
+                    trailInterval = 3f;
+                    lightColor = Pal.neoplasm1;    // glows on the ground
+                    lightRadius = 32f;
+                    lightOpacity = 0.6f;
+                    hitShake = 1.8f;
+                    hitSound = despawnSound = NeoSounds.squelch;
+                    hitSoundVolume = 0.9f;
             
                     fragBullets = 4;       // spread angle
                     fragVelocityMin = 1.3f;
                     fragVelocityMax = 1.8f;
                     hitEffect = despawnEffect = new MultiEffect(
                             NeoFx.gouteffect,
+                            NeoFx.goutSplat,
                             new WaveEffect(){{
                                 startDelay = 0f;
                                 sizeFrom = 3f;
@@ -103,15 +116,22 @@ public class NeoBlocks {
                     trailWidth = 1.5f;
                     trailLength = 11;
                     targetAir = true;
-                    hitEffect = despawnEffect = new WaveEffect(){{
+                    hitEffect = despawnEffect = new MultiEffect(NeoFx.goutFragHit, new WaveEffect(){{
                         colorFrom = colorTo = Pal.neoplasm2;
                         frontColor = Pal.neoplasm1;
                         sizeTo = 4f;
                         strokeFrom = 4f;
                         lifetime = 10f;
-                    }};
+                    }});
                     buildingDamageMultiplier = 0.3f;
                     homingPower = 0.15f;
+                    trailEffect = NeoFx.goutDrip;
+                    trailInterval = 5f;
+                    lightColor = Pal.neoplasm1;
+                    lightRadius = 14f;
+                    lightOpacity = 0.4f;
+                    hitSound = despawnSound = NeoSounds.squelch;
+                    hitSoundVolume = 0.35f;
                     }};
                     
                 }}
@@ -135,14 +155,14 @@ public class NeoBlocks {
             reload = 60f;
             ammoEjectBack = 5f;
             ammoPerShot = 2;
-            velocityRnd = 0.2f;
+            velocityRnd = 0.3f;
             scaleLifetimeOffset = 1f / 9f;
             recoil = 1.5f;
-            shake = 2f;
+            shake = 3.5f;
             range = 150f;
             minRange = 50f;
             coolant = consumeCoolant(0.3f);
-                shootEffect = new MultiEffect(Fx.shootTitan, new WaveEffect(){{
+                shootEffect = new MultiEffect(NeoFx.goutShoot, new WaveEffect(){{
                     colorFrom = colorTo = Pal.neoplasm2;
                     sizeTo = 16f;
                     lifetime = 10f;
@@ -150,7 +170,11 @@ public class NeoBlocks {
                 }});
             scaledHealth = 230;
             shootSound = NeoSounds.artillery;
+            soundPitchMin = 0.85f;   // each shot sounds a little different
+            soundPitchMax = 1.1f;
             drawer = new DrawTurret("reinforced-"){{
+                //0 while idle; once it is awake the parts twitch nervously
+                PartProgress twitch = PartProgress.warmup.mul(PartProgress.warmup.absin(6f, 0.25f));
                 parts.addAll(
                     
                 (new RegionPart("-rightblade"){{
@@ -158,6 +182,7 @@ public class NeoBlocks {
                     moveRot = -5f;
                     mirror = false;
                     moves.add(new PartMove(PartProgress.recoil, 0f, -2f, -2f));
+                    moves.add(new PartMove(twitch, 0f, 0f, -2f * 0.75f));
                     heatColor = Color.red;
                     layerOffset = -0.01f;
                 }}),
@@ -166,6 +191,7 @@ public class NeoBlocks {
                     moveRot = 5f;
                     mirror = false;
                     moves.add(new PartMove(PartProgress.recoil, 0f, -2f, 2f));
+                    moves.add(new PartMove(twitch, 0f, 0f, 2f * 0.75f));
                     heatColor = Color.red;
                     layerOffset = -0.01f;
                 }}),
@@ -174,6 +200,7 @@ public class NeoBlocks {
                     moveRot = -2.5f;
                     mirror = false;
                     moves.add(new PartMove(PartProgress.recoil, 0f, -1f, -2f));
+                    moves.add(new PartMove(twitch, 0f, 0f, -2f * 0.75f));
                     heatColor = Color.red;
                     layerOffset = -0.01f;
                 }},
@@ -182,6 +209,7 @@ public class NeoBlocks {
                     moveRot = 2.5f;
                     mirror = false;
                     moves.add(new PartMove(PartProgress.recoil, 0f, -1f, 2f));
+                    moves.add(new PartMove(twitch, 0f, 0f, 2f * 0.75f));
                     heatColor = Color.red;
                     layerOffset = -0.01f;
                 }}));;
@@ -359,10 +387,7 @@ public class NeoBlocks {
 
 
 
-            drawer = new DrawMulti(
-                new DrawBlurSpin("-rotator", 6f),
-                 new DrawRegion("-bottom"),
-                  new DrawLiquidTile(Liquids.neoplasm), new DrawDefault());
+            drawer = new DrawMulti(new DrawBlurSpin("-rotator", 6f), new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.neoplasm), new DrawDefault());
          
         }};
 
@@ -380,19 +405,35 @@ public class NeoBlocks {
             itemCapacity = 30;
             drawer = new DrawMulti(
                 new DrawRegion("-bottom"),
+                //neoplasm rises in the chamber the more the fabricator stores
+
                 new DrawLiquidTile(Liquids.neoplasm, 2f),
-                new DrawBubbles(NeoColor.neoFleshOutline){{
-                    sides = 10;
-                    recurrence = 3f;
-                    spread = 6;
-                    radius = 1.5f;
-                    amount = 20;
-                }},
                 new DrawRegion(),
                 new DrawLiquidOutputs(),
+                new DrawDefault(),
+                //red vortex while it is working
                 new DrawNeoTornado(){{
+                    color = Color.valueOf("ff3b2f");      // main color
+                    coreColor = Color.valueOf("ffb27a");  // hot core at the bottom
+                    darkColor = Color.valueOf("8a1014");  // dark top of the funnel
+                    spinSpeed = 7f;                       // faster = angrier
+                    height = 7f;                          // how tall the funnel is
+                    topRadius = 4.8f;                     // how wide the top gets
+                }},
+                //flashes "chitin-fabricator-heat" the instant it produces
+                new FlashCrafter.DrawCraftFlash(){{
+                    // suffix = "-heat";                  // sprite name suffix
+                     color = Color.valueOf("ff8a3d");               // tint of the image
+                     lightColor = Color.valueOf("ffffff");
+                    // curve = 1.6f;                      // higher = sharper flash
                 }}
             );
+
+            // ---- production flash ----
+            flashTime = 28f;                              // ticks the flash takes to fade
+            burstColor = Color.valueOf("ff6a2b");         // sparks / embers
+            burstCoreColor = Color.valueOf("ffe2a8");     // hot core of the sparks
+            bursts = 3;                                   // particle bursts per craft
             fogRadius = 3;
             researchCost = with(Items.beryllium, 150, Items.graphite, 50);
             ambientSound = NeoSounds.smelter;

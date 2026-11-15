@@ -8,6 +8,7 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
 import arc.util.*;
+import hyperplasia.content.utils.NeoFx;
 import hyperplasia.content.utils.*;
 import mindustry.ai.*;
 import mindustry.ai.types.*;
@@ -40,7 +41,8 @@ import static mindustry.Vars.*;
 
 public class NeoUnitTypes {
 
-    public static NeoplasmUnitType spidern, gastritis, musk;
+    public static NeoplasmUnitType spidern, gastritis, musk, logger;
+    public static CancerUnitType cancer;
 
     public static void load(){
 
@@ -394,6 +396,7 @@ weapons.add(new Weapon() {{
     }});
 }};
 
+
         musk = new LivingNeoplasmUnitType("musk") {{
             constructor = LegsUnit::create;
 
@@ -523,5 +526,284 @@ weapons.add(new Weapon() {{
                 }};
             }});
         }};
+
+
+        cancer = new CancerUnitType("cancer") {{
+            constructor = LegsUnit::create;
+
+            //tier 5: even slower and tougher than the musk, with a beam that melts everything in front of it
+            speed = 0.26f;
+            drag = 0.3f;
+            hitSize = 46f;
+            rotateSpeed = 0.75f;
+            health = 30000;
+            armor = 22f;
+            fogRadius = 48f;
+            targetAir = true;
+
+            //the sprites have no outlines, and the parts don't pulse so the body doesn't either
+            outlines = true;
+            cleanOutlines = false;
+            pulseAmount = 0f;
+            //the cell is drawn above the parts (see CancerUnitType)
+            drawCell = true;
+
+            //4 short, stubby legs, same idea as the musk
+            lockLegBase = true;
+            legContinuousMove = true;
+            legCount = 4;
+            legGroupSize = 2;
+            legLength = 14f;
+            legBaseOffset = 16f;
+            legExtension = -6f;
+            legMaxLength = 1.3f;
+            legForwardScl = 0.7f;
+            legMoveSpace = 1.2f;
+            legStraightness = 0.4f;
+            baseLegStraightness = 0.5f;
+            rippleScale = 3f;
+            stepShake = 0.8f;
+
+            legSplashDamage = 70;
+            legSplashRange = 44;
+            drownTimeMultiplier = 0.5f;
+
+            hovering = true;
+            shadowElevation = 0.35f;
+            groundLayer = Layer.legUnit;
+
+            abilities.add(new LiquidExplodeAbility() {{
+                liquid = Liquids.neoplasm;
+            }});
+            neoplasmClouds = true;
+
+            //---- the spinning core under the parts ----
+            //colour of the core (cancer-effect.png is white, it gets tinted with this)
+            effectColor = Color.valueOf("ff3b2f");
+            //size of the core, 1 = native sprite size
+            effectScale = 0.25f;
+            //how fast it spins (degrees per tick): idle / weapon winding up / beam out
+            effectSpinIdle = 0.35f;
+            effectSpinCharge = 2.2f;
+            effectSpinFire = 6.5f;
+            //how bright it is: idle / beam out
+            effectAlphaIdle = 1f;
+            effectAlphaFire = 1f;
+            //how much it glows (bloom) while attacking, 0 = no glow
+            effectGlow = 1f;
+
+            //---- the 12 parts: cancer-one ... cancer-twelve ----
+            //every part slides away from the body: 3 units while the weapon winds up (target found / mouse1 held),
+            //another 8 while the beam is out. directions are measured in the sprites (x right, y down), from the body to the part.
+            spreadParts(
+                new String[]{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"},
+                new float[][]{
+                    {-0.248f, -0.969f}, {-0.497f, -0.868f}, {-0.800f, -0.599f}, {-0.997f, -0.072f},
+                    {-0.706f,  0.709f}, { 0.021f,  1.000f}, { 0.686f,  0.728f}, { 1.000f, -0.005f},
+                    { 0.829f, -0.560f}, { 0.488f, -0.873f}, { 0.244f, -0.970f}, { 0.245f, -0.970f}
+                },
+                3f, 8f
+            );
+
+            //---- the beam ----
+            weapons.add(new Weapon() {{
+                //comes out between the two horns
+                mirror = false;
+                rotate = false;
+                x = 0f;
+                y = 15f;
+                shootY = 0f;
+                top = false;
+                recoil = 0f;
+                //how fast the parts slide back in once the beam is gone
+                recoilTime = 50f;
+
+                //pause between two beams, counted from the moment a beam ends
+                reload = 260f;
+                shootCone = 12f;
+
+                //LONG warm-up: nothing fires until the weapon has warmed up for 170 ticks (about 2.8s), no matter what.
+                //the parts spread out while it does. once a beam is out it burns until its lifetime ends.
+                continuous = true;
+                linearWarmup = true;
+                shootWarmupSpeed = 1f / 170f;
+                minWarmup = 0.98f;
+
+                shootStatus = StatusEffects.slow;
+
+                shootSound = NeoSounds.beamLoop;
+                //only newer game versions have a separate "beam starts" sound
+                NeoSounds.setIfPresent(this, "initialShootSound", NeoSounds.beamStart);
+
+                bullet = new ContinuousLaserBulletType() {{
+                    //damage is dealt every damageInterval ticks: 48 / 5 ticks = ~575 per second
+                    damage = 48f;
+                    damageInterval = 5f;
+                    length = 280f;
+                    lifetime = 210f;
+                    width = 12f;
+                    drawSize = 620f;
+                    largeHit = true;
+                    shake = 2f;
+                    fadeTime = 30f;
+
+                    colors = new Color[]{
+                        Pal.neoplasm2.cpy().a(0.4f),
+                        Pal.neoplasm1.cpy().a(0.6f),
+                        Color.valueOf("ffb27a"),
+                        Color.white
+                    };
+                    hitColor = lightColor = Pal.neoplasm1;
+
+                    hitEffect = Fx.hitMeltdown;
+                    despawnEffect = Fx.smokeCloud;
+                    smokeEffect = Fx.none;
+
+                    incendChance = 0.08f;
+                    incendSpread = 6f;
+                    incendAmount = 1;
+                    status = StatusEffects.melting;
+                    statusDuration = 60f;
+                    buildingDamageMultiplier = 0.9f;
+                }};
+
+                //the slowdown lasts as long as the beam
+                shootStatusDuration = bullet.lifetime + 20f;
+            }});
+        }};
+        
+        logger = new LivingNeoplasmUnitType("logger") {{
+            constructor = LegsUnit::create;
+
+            //tier 4 tank: very slow, enormous health pool, extreme armor
+            speed = 0.3f;
+            drag = 0.14f;
+            hitSize = 44f;
+            rotateSpeed = 0.9f;
+            health = 24000;
+            armor = 20f;
+            fogRadius = 40f;
+            faceTarget = false;        //body walks where it wants, the cannon tracks on its own
+            drawCell = true;           //logger-cell.png, tinted with the team color
+
+            //4 heavy legs
+            legCount = 4;
+            legGroupSize = 2;
+            legLength = 38f;
+            legBaseOffset = 10f;
+            legExtension = -4f;
+            legMoveSpace = 1.4f;
+            legPairOffset = 3f;
+            legLengthScl = 0.9f;
+            legForwardScl = 0.8f;
+            legMinLength = 0.4f;
+            legMaxLength = 1.1f;
+            legStraightness = 0.4f;
+            baseLegStraightness = 0.4f;
+            lockLegBase = true;
+            legContinuousMove = true;
+            hovering = true;
+            allowLegStep = true;
+            stepShake = 0.4f;
+            shadowElevation = 0.35f;
+            groundLayer = Layer.legUnit;
+
+            //every step crushes what is under the foot
+            legSplashDamage = 70f;
+            legSplashRange = 32f;
+
+            abilities.add(new LiquidExplodeAbility() {{
+                liquid = Liquids.neoplasm;
+            }});
+
+            //the gauss cannon: sits in the middle of the shell and tracks targets on its own
+            weapons.add(new Weapon("hyperplasia-logger-weapon") {{
+                mirror = false;
+                rotate = true;
+                rotateSpeed = 1.4f;
+                x = 0f;
+                y = 0f;
+                shootY = 18f;          //tip of the barrel
+                top = true;
+
+                reload = 200f;
+                recoil = 4f;
+                shake = 6f;
+                shootCone = 6f;
+                cooldownTime = 90f;
+
+                //the tendrils spread and the barrel charges before the beam is released
+                shoot.firstShotDelay = 40f;
+                shootWarmupSpeed = 0.06f;
+                minWarmup = 0.75f;
+
+                chargeSound = NeoSounds.chargeFinal;
+                shootSound = NeoSounds.shootAltLong;
+                soundPitchMin = 0.8f;
+                soundPitchMax = 0.95f;
+
+                bullet = new HelixLaserBulletType() {{
+                    damage = 650f;
+                    length = 280f;
+                    buildingDamageMultiplier = 0.6f;
+                    knockback = 4f;
+                    lifetime = 26f;
+                    //stopped by static walls and solid enemy buildings (see HelixLaserBulletType for options)
+                    blockedByTerrain = true;
+                    blockedByBuildings = true;
+                    blockedByAllies = false;
+                }};
+
+                //the barrel slides back when it fires
+                parts.add(new RegionPart("-barrel") {{
+                    mirror = false;
+                    under = false;
+                    layerOffset = 0.001f;
+                    progress = PartProgress.recoil;
+                    moves.add(new PartMove(PartProgress.recoil, 0f, -5f, 0f));
+                }});
+
+                //glowing orb at the muzzle that swells while charging
+                parts.add(new ShapePart() {{
+                    circle = true;
+                    hollow = false;
+                    y = 18f;
+                    radius = 0f;
+                    radiusTo = 3.6f;
+                    color = Color.valueOf("8fd14a");
+                    layer = Layer.effect;
+                    progress = PartProgress.warmup.mul(PartProgress.reload.inv());
+                }});
+
+                //the two feelers on either side of the muzzle spread out, and sway gently when idle
+                parts.add(new RegionPart() {{
+                    name = "hyperplasia-logger-left";
+                    mirror = false;
+                    under = false;
+                    layerOffset = 0.002f;
+                    progress = PartProgress.warmup;
+                    moveRot = 14f;
+                    moveX = -2f;
+                    moves.add(new PartMove(PartProgress.recoil, 0f, -2f, 0f));
+                    moves.add(new PartMove(PartProgress.constant(0f).sin(45f, 1f), 0f, 0f, 2.5f));
+                }});
+                parts.add(new RegionPart() {{
+                    name = "hyperplasia-logger-right";
+                    mirror = false;
+                    under = false;
+                    layerOffset = 0.002f;
+                    progress = PartProgress.warmup;
+                    moveRot = -14f;
+                    moveX = 2f;
+                    moves.add(new PartMove(PartProgress.recoil, 0f, -2f, 0f));
+                    moves.add(new PartMove(PartProgress.constant(0f).sin(22f, 45f, 1f), 0f, 0f, -2.5f));
+                }});
+            }});
+        }};
+
+        // ---- neoplasm units no longer heal by absorbing neoplasm puddles ----
+        for(NeoplasmUnitType unit : new NeoplasmUnitType[]{spidern, gastritis, musk, logger}){
+            if(unit != null) unit.abilities.removeAll(a -> a instanceof LiquidRegenAbility);
+        }
 }
 }

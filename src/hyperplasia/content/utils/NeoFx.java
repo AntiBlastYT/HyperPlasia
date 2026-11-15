@@ -169,4 +169,111 @@ public class NeoFx {
         Lines.lineAngle(e.x + Angles.trnsx(e.rotation, dist), e.y + Angles.trnsy(e.rotation, dist), e.rotation, len);
         Draw.reset();
     });
+
+    /**
+     * Particle burst for the chitin fabricator when it produces something.
+     * Color = main color of the sparks, data (optional Color) = hot core color.
+     */
+    public static final Effect craftBurst = new Effect(46f, 90f, e -> {
+        Color core = e.data instanceof Color c ? c : Pal.lighterOrange;
+
+        //shock ring
+        Draw.color(core, e.color, e.fin());
+        Lines.stroke(1.8f * e.fout());
+        Lines.circle(e.x, e.y, 3f + 22f * e.finpow());
+
+        //fast sparks
+        Draw.color(core, e.color, e.fin());
+        Angles.randLenVectors(e.id, 12, 4f + 30f * e.finpow(), (x, y) -> {
+            Lines.stroke(0.4f + 1.3f * e.fout());
+            Lines.lineAngle(e.x + x, e.y + y, Mathf.angle(x, y), 1f + 5f * e.fout());
+        });
+
+        //embers drifting up and fading
+        Draw.color(e.color, Pal.neoplasmOutline, e.fin());
+        Angles.randLenVectors(e.id + 7, 8, 3f + 16f * e.finpow(), (x, y) -> {
+            Fill.circle(e.x + x * 0.8f, e.y + y * 0.8f + 6f * e.finpow(), 0.6f + 1.8f * e.fout());
+        });
+
+        //dark smoke puff
+        Draw.color(Pal.neoplasmOutline, 0.35f * e.fout());
+        Angles.randLenVectors(e.id + 13, 4, 2f + 14f * e.finpow(), (x, y) -> {
+            Fill.circle(e.x + x, e.y + y, 2f + 4f * e.fin());
+        });
+
+        Draw.color();
+    });
+
+    // ---------------- gout turret ----------------
+
+    /** Muzzle spurt: spray of neoplasm along the shot direction, streaks, a glowing flash and a bit of smoke. */
+    public static final Effect goutShoot = new Effect(34f, 140f, e -> {
+        //bright flash at the muzzle
+        Draw.color(Pal.neoplasm1, e.color, e.fin());
+        Draw.alpha(0.85f * e.fout());
+        Fill.circle(e.x, e.y, 2f + 7f * e.fout());
+        Drawf.light(e.x, e.y, 34f * e.fout(), Pal.neoplasm1, 0.6f * e.fout());
+
+        //forward spray of blobs
+        Draw.color(Pal.neoplasm1, e.color, e.fin());
+        Angles.randLenVectors(e.id, 10, 6f + 38f * e.finpow(), e.rotation, 26f, (x, y) -> {
+            Fill.circle(e.x + x, e.y + y, 0.8f + 3.4f * e.fout());
+        });
+
+        //stretched streaks flying out
+        Angles.randLenVectors(e.id + 3, 6, 8f + 46f * e.finpow(), e.rotation, 14f, (x, y) -> {
+            Lines.stroke(0.6f + 2.2f * e.fout());
+            Lines.lineAngle(e.x + x, e.y + y, e.rotation, 2f + 9f * e.fout());
+        });
+
+        //dark smoke curling off
+        Draw.color(Pal.neoplasmOutline, 0.4f * e.fout());
+        Angles.randLenVectors(e.id + 5, 5, 4f + 18f * e.finpow(), e.rotation, 40f, (x, y) -> {
+            Fill.circle(e.x + x, e.y + y, 2f + 4f * e.fin());
+        });
+
+        Draw.color();
+    });
+
+    /** Little drip shed by gout bullets while they fly. Use as trailEffect. */
+    public static final Effect goutDrip = new Effect(26f, e -> {
+        Draw.color(Pal.neoplasm1, Pal.neoplasm2, e.fin());
+        Fill.circle(e.x, e.y, 0.f + 1.2f * e.fout());
+        Draw.color(Pal.neoplasmOutline, 0.35f * e.fout());
+    });
+
+    /** Gooey blotch left on the ground where a gout shell lands, plus droplets flung up and out. */
+    public static final Effect goutSplat = new Effect(85f, 160f, e -> {
+        float spread = Interp.pow3Out.apply(Mathf.clamp(e.fin() * 6f));
+        float fade = Interp.pow2Out.apply(e.fout());
+
+        //the blotch settles quickly, then slowly fades
+        Draw.color(Pal.neoplasm2, Pal.neoplasmOutline, e.fin());
+        Draw.alpha(0.55f * fade);
+        Angles.randLenVectors(e.id, 8, 4f + 20f * spread, (x, y) -> {
+            Fill.circle(e.x + x, e.y + y, 2.5f + 5f * spread * fade);
+        });
+        Draw.alpha(0.7f * fade);
+        Fill.circle(e.x, e.y, 6f * spread * fade);
+
+        //droplets flying up and landing
+        Draw.color(Pal.neoplasm1, Pal.neoplasm2, e.fin());
+        Angles.randLenVectors(e.id + 2, 9, 8f + 36f * e.finpow(), (x, y) -> {
+            float arc = Mathf.sin(e.fin() * Mathf.PI) * 9f;
+            Fill.circle(e.x + x, e.y + y + arc, 0.4f + 2.2f * e.fout(Interp.pow2Out));
+        });
+
+        Draw.color();
+    }).layer(Layer.debris);
+
+    /** Small splash for the little frag bullets. */
+    public static final Effect goutFragHit = new Effect(22f, 60f, e -> {
+        Draw.color(Pal.neoplasm1, Pal.neoplasm2, e.fin());
+        Angles.randLenVectors(e.id, 5, 2f + 14f * e.finpow(), (x, y) -> {
+            Fill.circle(e.x + x, e.y + y, 0.4f + 1.8f * e.fout());
+        });
+        Lines.stroke(1.2f * e.fout());
+        Lines.circle(e.x, e.y, 2f + 7f * e.finpow());
+        Draw.color();
+    });
 }
